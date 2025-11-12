@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Product, ProductCategory, Customer, CartItem } from "@/types";
 import SidebarDummy from "@/components/POS/SidebarDummy";
@@ -10,7 +10,7 @@ import QuantityModal, { Unit } from "@/components/POS/QuantityModal";
 
 type CartRow = CartItem & { id: string };
 
-export default function CheckoutPage() {
+function CheckoutContent() {
   const router = useRouter();
   const sp = useSearchParams();
   const customerId = sp.get("customerId");
@@ -137,5 +137,17 @@ export default function CheckoutPage() {
         unitPrice={modalTarget?.current_price ? modalTarget.current_price / 1000 : 0}
       />
     </main>
+  );
+}
+
+export default function CheckoutPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-slate-100 flex items-center justify-center">
+        <div className="text-slate-600">로딩 중...</div>
+      </main>
+    }>
+      <CheckoutContent />
+    </Suspense>
   );
 }
