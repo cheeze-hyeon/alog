@@ -24,7 +24,7 @@ const mockProducts = [
     stockMl: 10000,
     unitPricePerMl: 25,
     status: "on",
-    catergory: "shampoo",
+    category: "shampoo",
   },
   {
     id: "prd_shamp_rosemary",

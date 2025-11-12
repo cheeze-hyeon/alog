@@ -1,5 +1,5 @@
 export type { Customer } from "./customer";
-export type { Product } from "./product";
+export type { Product, ProductCategory } from "./product";
 export type { CartItem } from "./cart";
 export type {
   GetCustomerByPhoneQuery,

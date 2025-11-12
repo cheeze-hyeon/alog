@@ -30,15 +30,24 @@ export default function CheckoutPage() {
 
   // 🔸 고객 + 상품 불러오기
   useEffect(() => {
-    if (!customerId) return;
     (async () => {
       try {
-        const [cR, pR] = await Promise.all([
-          fetch(`/api/pos/customers?id=${customerId}`).then((r) => (r.ok ? r.json() : null)),
-          fetch(`/api/pos/products`).then((r) => r.json()),
-        ]);
-        if (cR) setCustomer(cR);
-        setProducts(pR);
+        const promises = [fetch(`/api/pos/products`).then((r) => r.json())];
+
+        // customerId가 있을 때만 고객 정보 조회
+        if (customerId) {
+          promises.push(
+            fetch(`/api/pos/customers?id=${customerId}`).then((r) => (r.ok ? r.json() : null)),
+          );
+        }
+
+        const results = await Promise.all(promises);
+        setProducts(results[0]);
+
+        // customerId가 있으면 고객 정보 설정
+        if (customerId && results[1]) {
+          setCustomer(results[1]);
+        }
       } catch {
         /* noop */
       }
