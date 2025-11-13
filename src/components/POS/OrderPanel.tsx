@@ -109,7 +109,7 @@ export default function OrderPanel({
         <div className="flex justify-between items-center">
           <p className="text-base md:text-lg font-bold text-black">할인</p>
           <p className="text-base md:text-lg font-medium text-black">
-            {discount.toLocaleString()}원
+            {discount.toLocaleString()}
           </p>
         </div>
         <div className="flex justify-between items-center">
