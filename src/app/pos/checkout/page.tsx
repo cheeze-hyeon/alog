@@ -21,7 +21,8 @@ function CheckoutContent() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [customerPhone, setCustomerPhone] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [activeCat, setActiveCat] = useState<ProductCategory>("shampoo");
+  const [activeCat, setActiveCat] = useState<ProductCategory | "all">("all");
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   // 장바구니
   const [cart, setCart] = useState<CartRow[]>([]);
@@ -325,7 +326,7 @@ function CheckoutContent() {
       {/* 왼쪽 영역: Header + CatalogPanel */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
         {/* 헤더 */}
-        <Header />
+        <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
 
         {/* 상품 카탈로그 */}
         <div className="flex-1 min-w-0 overflow-y-auto px-4 md:px-6 lg:px-8 pt-2 md:pt-4 pb-4 md:pb-6 lg:pb-8">
@@ -334,6 +335,7 @@ function CheckoutContent() {
             activeCat={activeCat}
             onChangeCat={setActiveCat}
             onPick={pickProduct}
+            searchQuery={searchQuery}
           />
         </div>
       </div>
