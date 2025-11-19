@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseServerClient } from "@/lib/supabase-client";
 import type { Receipt, ReceiptItem } from "@/types/receipt";
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(_: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const receiptId = parseInt(params.id, 10);
+    const { id } = await params;
+    const receiptId = parseInt(id, 10);
 
     if (isNaN(receiptId)) {
       return NextResponse.json({ error: "Invalid receipt ID" }, { status: 400 });
