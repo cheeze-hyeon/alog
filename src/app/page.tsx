@@ -7,7 +7,7 @@ export default function Home() {
         <h1 className="text-center text-2xl font-bold text-slate-900">알맹상점 · 빠른 이동</h1>
         <div className="grid gap-3">
           <Link
-            href="/receipts/rcpt_123"
+            href="/receipt/1010"
             className="inline-flex items-center justify-center rounded-md bg-emerald-600 px-4 py-3 text-sm font-semibold text-white hover:bg-emerald-500"
           >
             소비자용 영수증 예시
