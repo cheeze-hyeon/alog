@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
     if (receipts && receipts.length > 0) {
       const { data: receiptItems, error: itemsError } = await supabaseServerClient
         .from("receipt_item")
-        .select('"total_carbon_emission (kg)", receipt_id, product_id, "purchase_quantity (ml)", "purchase_unit_price (원/ml)"')
+        .select('id, "total_carbon_emission (kg)", receipt_id, product_id, "purchase_quantity (ml)", "purchase_unit_price (원/ml)"')
         .in(
           "receipt_id",
           receipts.map((r) => r.id),

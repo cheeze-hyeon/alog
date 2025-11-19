@@ -15,6 +15,10 @@ const CATEGORY_LABELS: Record<ProductCategory, string> = {
   snack_drink_base: "식품", // 간식 및 음료 베이스를 "식품"으로 표시
   cooking_ingredient: "식품", // 요리용 식재료도 "식품"으로 표시
   tea: "차류",
+  stationery: "문구류",
+  bathroom: "욕실용품",
+  cleaning: "청소용품",
+  kitchen: "주방용품",
 };
 
 export default function BadgesSection({ purchaseItems }: BadgesSectionProps) {
