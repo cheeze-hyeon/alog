@@ -9,6 +9,7 @@ export type {
   CustomerMyPageData,
   EnvironmentStats,
   CharacterLevel,
+  CharacterGrade,
   CharacterProgress,
   PurchaseItem,
 } from "./mypage";

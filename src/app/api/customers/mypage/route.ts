@@ -109,7 +109,7 @@ export async function GET(request: NextRequest) {
     // 고객의 영수증 목록 조회 (구매 횟수 계산용 및 구매 내역 조회)
     const { data: receipts, error: receiptsError } = await supabaseServerClient
       .from("receipt")
-      .select("id, visit_date")
+      .select("id, visit_date, total_amount")
       .eq("customer_id", customer.id)
       .order("visit_date", { ascending: false });
 
@@ -117,7 +117,17 @@ export async function GET(request: NextRequest) {
       console.error("Supabase error (receipts):", receiptsError);
     }
 
+    console.log("📋 Customer ID:", customer.id);
+    console.log("📋 Receipts found:", receipts?.length || 0);
+    if (receipts && receipts.length > 0) {
+      console.log("📋 Receipt details:", receipts);
+    }
+
     const totalPurchaseCount = receipts?.length || 0;
+    
+    // 실제 구매 금액 합산 (receipt의 total_amount 합계)
+    const actualAccumulatedAmount = receipts?.reduce((sum, r) => sum + (r.total_amount || 0), 0) || 0;
+    console.log("📋 Actual accumulated amount from receipts:", actualAccumulatedAmount);
 
     // 고객의 영수증 아이템에서 CO2 감축량 합계 계산 및 구매 내역 조회
     let co2ReductionKg = 0;
@@ -126,7 +136,7 @@ export async function GET(request: NextRequest) {
     if (receipts && receipts.length > 0) {
       const { data: receiptItems, error: itemsError } = await supabaseServerClient
         .from("receipt_item")
-        .select('id, "total_carbon_emission (kg)", receipt_id, product_id, "purchase_quantity (ml)", "purchase_unit_price (원/ml)"')
+        .select('id, total_carbon_emission, receipt_id, product_id, purchase_quantity, purchase_unit_price')
         .in(
           "receipt_id",
           receipts.map((r) => r.id),
@@ -136,8 +146,11 @@ export async function GET(request: NextRequest) {
         console.error("Supabase error (receipt_items):", itemsError);
       }
 
+      console.log("📋 Receipt items found:", receiptItems?.length || 0);
+      console.log("📋 Receipt IDs:", receipts.map((r) => r.id));
+
       co2ReductionKg =
-        receiptItems?.reduce((sum, item) => sum + (item["total_carbon_emission (kg)"] || 0), 0) || 0;
+        receiptItems?.reduce((sum, item) => sum + (item["total_carbon_emission"] || 0), 0) || 0;
 
       // 구매 내역 조회 (상품 정보 포함)
       if (receiptItems && receiptItems.length > 0) {
@@ -176,9 +189,11 @@ export async function GET(request: NextRequest) {
           const day = visitDate.getDate().toString().padStart(2, "0");
           const dateStr = `${year}${month}${day}`;
 
-          const quantity = item["purchase_quantity (ml)"] || 0;
-          const unitPrice = item["purchase_unit_price (원/ml)"] || 0;
+          const quantity = item["purchase_quantity"] || 0;
+          const unitPrice = item["purchase_unit_price"] || 0;
           const price = Math.round(quantity * unitPrice);
+
+          console.log(`📋 Purchase item: ${product?.name || "Unknown"}, price: ${price}, date: ${dateStr}`);
 
           // 카테고리 기반으로 리필 여부 판단 (임시 로직)
           // 실제로는 상품의 리필 여부를 확인해야 하지만, 일단 카테고리로 판단
@@ -227,7 +242,11 @@ export async function GET(request: NextRequest) {
     };
 
     // 캐릭터 진행 상황 계산
-    const accumulatedPurchaseAmount = loyalty?.accumulated_purchase_amount || 0;
+    // customer_loyalty의 값이 있으면 사용하고, 없으면 receipt의 total_amount 합계 사용
+    const accumulatedPurchaseAmount = loyalty?.accumulated_purchase_amount || actualAccumulatedAmount;
+    console.log("📋 Using accumulated amount for level calculation:", accumulatedPurchaseAmount);
+    console.log("📋 From loyalty:", loyalty?.accumulated_purchase_amount);
+    console.log("📋 From receipts:", actualAccumulatedAmount);
     const characterProgress = calculateCharacterProgress(accumulatedPurchaseAmount);
 
     // 배지 데이터 (더미 데이터 - 추후 동적 로직으로 교체 가능)

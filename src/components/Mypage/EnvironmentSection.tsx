@@ -8,7 +8,7 @@ export default function EnvironmentSection({ stats }: EnvironmentSectionProps) {
   const { refillCount, plasticReductionG, treeReduction, co2ReductionKg } = stats;
 
   return (
-    <div className="w-full bg-white px-4 py-6">
+    <div className="w-full bg-white px-4 pt-2 pb-6">
       <div className="max-w-md mx-auto">
         {/* 리필 버튼 */}
         <div className="w-48 h-9 rounded-[10px] bg-[#e04f4e] flex items-center justify-center mb-6 mx-auto">

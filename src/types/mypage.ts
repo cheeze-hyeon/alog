@@ -19,8 +19,17 @@ export interface PurchaseItem {
   type: "refill" | "product"; // 리필 또는 일반 상품
 }
 
+export interface CharacterGrade {
+  grade: number; // 등급 번호 (1~4)
+  name: string; // 등급 이름
+  emoji: string; // 등급 이모지
+  minAmount: number; // 등급 최소 금액
+  maxAmount: number | null; // 등급 최대 금액 (null이면 무제한)
+}
+
 export interface CharacterLevel {
   level: number;
+  grade: number; // 속한 등급
   name: string;
   emoji: string;
   minAmount: number; // 최소 구매 금액
@@ -29,10 +38,13 @@ export interface CharacterLevel {
 
 export interface CharacterProgress {
   currentLevel: CharacterLevel;
+  currentGrade: CharacterGrade;
   nextLevel: CharacterLevel | null;
+  nextGrade: CharacterGrade | null;
   currentAmount: number; // 현재 누적 구매 금액
   progressPercentage: number; // 현재 레벨 진행률 (0-100)
   amountToNextLevel: number; // 다음 레벨까지 필요한 금액
+  amountToNextGrade: number; // 다음 등급까지 필요한 금액
 }
 
 export interface CustomerMyPageData {
