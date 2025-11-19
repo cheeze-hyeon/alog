@@ -97,14 +97,14 @@ export async function POST(request: NextRequest) {
         const receiptItemData: any = {
           receipt_id: receipt.id,
           product_id: typeof item.productId === "string" ? parseInt(item.productId, 10) : item.productId,
-          "purchase_quantity (ml)": item.volumeG, // 실제로는 g 단위 값
-          "purchase_unit_price (원/ml)": item.unitPricePerG, // 실제로는 g당 단가
+          "purchase_quantity": item.volumeG, // 실제로는 g 단위 값
+          "purchase_unit_price": item.unitPricePerG, // 실제로는 g당 단가
         };
 
         // 탄소 배출량 관련 컬럼 (존재하는 경우)
         if (carbonEmissionPerG !== null) {
-          receiptItemData["purchase_carbon_emission_base (kg/ml)"] = carbonEmissionPerG; // 실제로는 g당 탄소 배출량 (kg/g)
-          receiptItemData["total_carbon_emission (kg)"] = carbonEmissionPerG * item.volumeG; // g당 kg * g = kg
+          receiptItemData["purchase_carbon_emission_base"] = carbonEmissionPerG; // 실제로는 g당 탄소 배출량 (kg/g)
+          receiptItemData["total_carbon_emission"] = carbonEmissionPerG * item.volumeG; // g당 kg * g = kg
         }
 
         // 📋 데이터베이스에 저장되는 데이터 로깅

@@ -23,18 +23,10 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: "영수증을 찾을 수 없습니다." }, { status: 404 });
     }
 
-    // ReceiptItem 조회 (product 정보 포함)
+    // ReceiptItem 조회
     const { data: items, error: itemsError } = await supabaseServerClient
       .from("receipt_item")
-      .select(
-        `
-        *,
-        product:product_id (
-          id,
-          name
-        )
-      `,
-      )
+      .select("*")
       .eq("receipt_id", receiptId);
 
     if (itemsError) {
@@ -42,11 +34,32 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
       return NextResponse.json({ error: "영수증 항목 조회 중 오류가 발생했습니다." }, { status: 500 });
     }
 
-    // product 정보를 각 item에 추가
-    const itemsWithProduct = (items || []).map((item: any) => ({
-      ...item,
-      name: item.product?.name || null,
-    }));
+    // product_id가 있는 경우 product 정보를 별도로 조회
+    const itemsWithProduct = await Promise.all(
+      (items || []).map(async (item: any) => {
+        let productName = null;
+        let productCategory = null;
+        
+        if (item.product_id) {
+          const { data: product, error: productError } = await supabaseServerClient
+            .from("product")
+            .select("id, name, category")
+            .eq("id", item.product_id)
+            .maybeSingle();
+
+          if (!productError && product) {
+            productName = product.name;
+            productCategory = product.category;
+          }
+        }
+
+        return {
+          ...item,
+          name: productName,
+          category: productCategory,
+        };
+      })
+    );
 
     return NextResponse.json({
       ...(receipt as Receipt),

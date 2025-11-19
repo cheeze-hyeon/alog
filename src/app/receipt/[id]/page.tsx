@@ -1,83 +1,29 @@
-import type { Receipt } from "@/types/receipt";
+import type { Receipt, ReceiptItem } from "@/types/receipt";
 import type { Customer } from "@/types/customer";
-import { supabaseServerClient } from "@/lib/supabase-client";
+import { getBaseUrl } from "@/lib/env";
+import { REFILL_CATEGORY, CATEGORY_LABELS, type ProductCategory } from "@/types/product";
 
 type ReceiptWithItems = Receipt & {
-  items: Array<{
-    id: number;
-    product_id: number | null;
-    purchase_quantity_ml: number | null;
-    purchase_unit_price_원_per_ml: number | null;
-    name?: string;
+  items: Array<ReceiptItem & {
+    name?: string | null;
+    category?: string | null;
   }>;
 };
 
 async function getReceipt(id: string): Promise<ReceiptWithItems | null> {
   try {
-    const receiptId = parseInt(id, 10);
-    if (isNaN(receiptId)) {
-      console.error("Invalid receipt ID:", id);
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/receipt/${id}`, {
+      cache: "no-store",
+    });
+
+    if (!response.ok) {
+      console.error("API error:", response.status, response.statusText);
       return null;
     }
 
-    // Receipt 조회
-    const { data: receipt, error: receiptError } = await supabaseServerClient
-      .from("receipt")
-      .select("*")
-      .eq("id", receiptId)
-      .single();
-
-    if (receiptError) {
-      console.error("Supabase error (receipt):", {
-        message: receiptError.message,
-        details: receiptError.details,
-        hint: receiptError.hint,
-        code: receiptError.code,
-        fullError: JSON.stringify(receiptError, null, 2),
-      });
-      return null;
-    }
-
-    if (!receipt) {
-      console.error("Receipt not found for ID:", receiptId);
-      return null;
-    }
-
-    // ReceiptItem 조회 (product 정보 포함)
-    const { data: items, error: itemsError } = await supabaseServerClient
-      .from("receipt_item")
-      .select(
-        `
-        *,
-        product:product_id (
-          id,
-          name
-        )
-      `,
-      )
-      .eq("receipt_id", receiptId);
-
-    if (itemsError) {
-      console.error("Supabase error (receipt_item):", {
-        message: itemsError.message,
-        details: itemsError.details,
-        hint: itemsError.hint,
-        code: itemsError.code,
-        fullError: JSON.stringify(itemsError, null, 2),
-      });
-      return null;
-    }
-
-    // product 정보를 각 item에 추가
-    const itemsWithProduct = (items || []).map((item: any) => ({
-      ...item,
-      name: item.product?.name || null,
-    }));
-
-    return {
-      ...(receipt as Receipt),
-      items: itemsWithProduct,
-    };
+    const data = await response.json();
+    return data as ReceiptWithItems;
   } catch (error) {
     console.error("Error fetching receipt:", error);
     return null;
@@ -87,28 +33,17 @@ async function getReceipt(id: string): Promise<ReceiptWithItems | null> {
 async function getCustomer(customerId: number | null): Promise<Customer | null> {
   if (!customerId) return null;
   try {
-    const { data, error } = await supabaseServerClient
-      .from("customer")
-      .select("*")
-      .eq("id", customerId)
-      .single();
+    const baseUrl = getBaseUrl();
+    const response = await fetch(`${baseUrl}/api/pos/customers?id=${customerId}`, {
+      cache: "no-store",
+    });
 
-    if (error) {
-      console.error("Supabase error (customer):", {
-        message: error.message,
-        details: error.details,
-        hint: error.hint,
-        code: error.code,
-        fullError: JSON.stringify(error, null, 2),
-      });
+    if (!response.ok) {
+      console.error("API error:", response.status, response.statusText);
       return null;
     }
 
-    if (!data) {
-      console.error("Customer not found for ID:", customerId);
-      return null;
-    }
-
+    const data = await response.json();
     return data as Customer;
   } catch (error) {
     console.error("Error fetching customer:", error);
@@ -143,61 +78,55 @@ function formatDateTime(dateString: string | Date | null): string {
 export default async function ReceiptPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   
-  // TODO: API가 작동하면 아래 주석을 해제하고 더미 데이터 부분을 제거하세요
-  // const receipt = await getReceipt(id);
-  // const customer = await getCustomer(receipt.customer_id ?? null);
-  // const customerName = customer?.name || "고객";
-  // 
-  // // 카테고리별로 그룹화 (product의 category 필드 사용)
-  // const allItems = receipt.items.map(item => ({
-  //   ...item,
-  //   category: item.category || "기타", // product의 category 필드 사용
-  // }));
-  // const itemsByCategory = allItems.reduce((acc, item) => {
-  //   const category = item.category || "기타";
-  //   if (!acc[category]) {
-  //     acc[category] = [];
-  //   }
-  //   acc[category].push(item);
-  //   return acc;
-  // }, {} as Record<string, typeof allItems>);
+  const receipt = await getReceipt(id);
+  if (!receipt) {
+    return (
+      <main className="mx-auto max-w-2xl px-6 py-10">
+        <div className="max-w-[393px] mx-auto bg-white px-5 py-6">
+          <p className="text-center text-black/70">영수증을 찾을 수 없습니다.</p>
+        </div>
+      </main>
+    );
+  }
 
-  // 더미 데이터
-  const customerName = "다운";
-  const visitDate = "2025-11-01 15:07:21";
-  const formattedDate = "11월 1일";
+  const customer = await getCustomer(receipt.customer_id ?? null);
+  const customerName = customer?.name || "고객";
   
-  // 더미 아이템 데이터 (카테고리 포함)
-  const allItems = [
-    {
-      id: 1,
-      name: "아꾸아 트리플 베리어 선크림",
-      category: "리필",
-      purchase_quantity_ml: 200,
-      purchase_unit_price_원_per_ml: 100,
-      total: 20000,
-    },
-    {
-      id: 2,
-      name: "남오일로 벌레퇴치",
-      category: "리필",
-      purchase_quantity_ml: 50,
-      purchase_unit_price_원_per_ml: 60,
-      total: 3000,
-    },
-    {
-      id: 3,
-      name: "자연한알 오리지널(해물) 코인육수",
-      category: "상품",
-      purchase_quantity_ml: 1,
-      purchase_unit_price_원_per_ml: 350,
-      total: 1750,
-    },
-  ];
+  const visitDate = receipt.visit_date ? formatDateTime(receipt.visit_date) : "";
+  const formattedDate = receipt.visit_date ? formatDate(receipt.visit_date) : "";
+  
+  // 아이템 데이터 변환 및 카테고리별 그룹화
+  const allItems = (receipt.items || []).map((item: any) => {
+    // 실제 컬럼명 또는 별칭 모두 처리
+    const quantity = item.purchase_quantity ?? item["purchase_quantity"] ?? 0;
+    const unitPrice = item.purchase_unit_price ?? item["purchase_unit_price"] ?? 0;
+    const total = quantity * unitPrice;
+    
+    // 카테고리 정보 처리
+    const categoryKey = item.category as ProductCategory | null;
+    const categoryLabel = categoryKey && CATEGORY_LABELS[categoryKey] 
+      ? CATEGORY_LABELS[categoryKey] 
+      : "기타";
+    
+    // REFILL_CATEGORY에 속하는지 확인
+    const isRefill = categoryKey !== null && REFILL_CATEGORY[categoryKey] !== undefined;
+    console.log(isRefill);
+    
+    return {
+      id: item.id,
+      name: item.name || "제품명 없음",
+      category: isRefill ? "리필" : "상품",
+      categoryKey: categoryKey,
+      isRefill,
+      purchase_quantity: quantity,
+      purchase_unit_price: unitPrice,
+      total,
+    };
+  });
 
-  // 카테고리별로 그룹화
+
   const itemsByCategory = allItems.reduce((acc, item) => {
-    const category = item.category || "기타";
+    const category = item.category;
     if (!acc[category]) {
       acc[category] = [];
     }
@@ -205,7 +134,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
     return acc;
   }, {} as Record<string, typeof allItems>);
 
-  const totalAmount = 24750;
+  const totalAmount = receipt.total_amount ?? 0;
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-10">
@@ -220,7 +149,20 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
 
         {/* 빨간 원 + 날짜 */}
         <div className="flex flex-col items-center gap-3 mt-4">
-          <div className="w-[57px] h-[57px] rounded-full bg-[#E04F4E]" />
+          <div className="flex items-center gap-2">
+            {/* 빨간 원 (파란색 테두리) */}
+            <svg
+              width={57}
+              height={57}
+              viewBox="0 0 57 57"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <circle cx="28.5" cy="28.5" r="28.5" fill="#E04F4E" />
+            </svg>
+            {/* 하늘색 정사각형 (회전) */}
+            <div className="w-[53px] h-[53px] bg-[#6cb6e0] -rotate-12" />
+          </div>
           <p className="text-[15px] font-semibold">
             {formattedDate} {customerName} 님의 소비 내역이에요!
           </p>
@@ -248,9 +190,9 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
                     <span>{formatCurrency(item.total)}</span>
                   </div>
                   <p className="text-xs text-black/50">
-                    {category === "리필" 
-                      ? `${item.purchase_quantity_ml}ml x ${formatCurrency(item.purchase_unit_price_원_per_ml)}/ml`
-                      : `${item.purchase_quantity_ml}개 x ${formatCurrency(item.purchase_unit_price_원_per_ml)}/개`}
+                    {item.isRefill
+                      ? `${item.purchase_quantity}g x ${formatCurrency(item.purchase_unit_price)}/g`
+                      : `${item.purchase_quantity}개 x ${formatCurrency(item.purchase_unit_price)}/개`}
                   </p>
                   <button className="w-full border border-[#959595]/50 rounded-xl py-2 mt-3 text-[#e04f4e] text-[13px]">
                     상품 상세 정보 확인
