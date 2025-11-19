@@ -1,8 +1,7 @@
 export interface CartItem {
   productId: string;
   name: string;
-  volumeMl: number;
-  unitPricePerMl: number;
+  volumeG: number;
+  unitPricePerG: number;
   amount: number;
-  measureUnit: "ml" | "g" | null;
 }

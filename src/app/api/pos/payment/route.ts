@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { supabaseClient } from "@/lib/supabase-client";
+import { supabaseServerClient } from "@/lib/supabase-client";
 import type { CartItem } from "@/types/cart";
 import type { ReceiptItem } from "@/types/receipt";
 
@@ -10,6 +10,14 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     const { customerId, items, totalAmount } = body;
+
+    // 📋 서버로 전송된 데이터 로깅
+    console.log("=== 결제 데이터 전송 ===");
+    console.log("전송 시간:", new Date().toISOString());
+    console.log("고객 ID:", customerId);
+    console.log("총 금액:", totalAmount);
+    console.log("상품 목록:", JSON.stringify(items, null, 2));
+    console.log("========================");
 
     // ✅ 필수 데이터 검증
     if (!customerId || !Array.isArray(items) || items.length === 0) {
@@ -26,20 +34,40 @@ export async function POST(request: NextRequest) {
     }
 
     // Receipt 생성
-    const { data: receipt, error: receiptError } = await supabaseClient
+    const receiptData = {
+      customer_id: customerIdNum,
+      visit_date: new Date().toISOString(),
+      total_amount: totalAmount,
+    };
+
+    // 📋 데이터베이스에 저장되는 영수증 데이터 로깅
+    console.log("영수증 저장:", JSON.stringify(receiptData, null, 2));
+
+    const { data: receipt, error: receiptError } = await supabaseServerClient
       .from("receipt")
-      .insert({
-        customer_id: customerIdNum,
-        visit_date: new Date().toISOString(),
-        total_amount: totalAmount,
-      })
+      .insert(receiptData)
       .select()
       .single();
 
     if (receiptError) {
-      console.error("Supabase error (receipt):", receiptError);
+      console.error("=== 영수증 저장 오류 ===");
+      console.error("Supabase error (receipt):", JSON.stringify(receiptError, null, 2));
+      console.error("오류 코드:", receiptError.code);
+      console.error("오류 메시지:", receiptError.message);
+      console.error("오류 상세:", receiptError.details);
+      console.error("오류 힌트:", receiptError.hint);
+      console.error("저장 시도한 데이터:", JSON.stringify(receiptData, null, 2));
+      console.error("=========================");
+      
+      // 실제 Supabase 오류 메시지 전달 (더 자세한 정보 포함)
+      const errorMessage = receiptError.message || receiptError.details || receiptError.hint || "영수증 저장 중 오류가 발생했습니다.";
       return NextResponse.json(
-        { error: "영수증 저장 중 오류가 발생했습니다." },
+        { 
+          error: errorMessage,
+          code: receiptError.code,
+          details: receiptError.details,
+          hint: receiptError.hint,
+        },
         { status: 500 },
       );
     }
@@ -48,34 +76,51 @@ export async function POST(request: NextRequest) {
     const receiptItems = await Promise.all(
       items.map(async (item: CartItem) => {
         // Product 정보 조회 (carbon emission 계산을 위해)
-        const { data: product } = await supabaseClient
+        const productId = typeof item.productId === "string" ? parseInt(item.productId, 10) : item.productId;
+        const { data: product, error: productError } = await supabaseServerClient
           .from("product")
           .select("current_carbon_emission")
-          .eq("id", typeof item.productId === "string" ? parseInt(item.productId, 10) : item.productId)
-          .single();
+          .eq("id", productId)
+          .maybeSingle();
 
-        const carbonEmissionPerMl = product?.current_carbon_emission
-          ? product.current_carbon_emission / 1000 // kg/ml로 변환 (가정: 1L = 1000ml 기준)
-          : null;
+        // 제품 조회 오류 처리 (제품이 없어도 계속 진행)
+        if (productError && productError.code !== "PGRST116") {
+          console.error(`제품 조회 오류 (제품 ID: ${productId}):`, JSON.stringify(productError, null, 2));
+        }
 
-        const { data: receiptItem, error: itemError } = await supabaseClient
+        // current_carbon_emission은 g당 kg 단위로 가정
+        // (예: 0.001 kg/g = 1g당 0.001kg)
+        const carbonEmissionPerG = product?.current_carbon_emission || null;
+
+        // DB 스키마의 필드명은 ml이지만 실제 값은 g 단위로 저장
+        // 실제 컬럼명에 공백과 괄호가 포함되어 있으므로 따옴표로 감싸서 사용
+        const receiptItemData: any = {
+          receipt_id: receipt.id,
+          product_id: typeof item.productId === "string" ? parseInt(item.productId, 10) : item.productId,
+          "purchase_quantity (ml)": item.volumeG, // 실제로는 g 단위 값
+          "purchase_unit_price (원/ml)": item.unitPricePerG, // 실제로는 g당 단가
+        };
+
+        // 탄소 배출량 관련 컬럼 (존재하는 경우)
+        if (carbonEmissionPerG !== null) {
+          receiptItemData["purchase_carbon_emission_base (kg/ml)"] = carbonEmissionPerG; // 실제로는 g당 탄소 배출량 (kg/g)
+          receiptItemData["total_carbon_emission (kg)"] = carbonEmissionPerG * item.volumeG; // g당 kg * g = kg
+        }
+
+        // 📋 데이터베이스에 저장되는 데이터 로깅
+        console.log(`영수증 아이템 저장 (제품 ID: ${item.productId}):`, JSON.stringify(receiptItemData, null, 2));
+
+        const { data: receiptItem, error: itemError } = await supabaseServerClient
           .from("receipt_item")
-          .insert({
-            receipt_id: receipt.id,
-            product_id: typeof item.productId === "string" ? parseInt(item.productId, 10) : item.productId,
-            purchase_quantity_ml: item.volumeMl,
-            purchase_unit_price_원_per_ml: item.unitPricePerMl,
-            purchase_carbon_emission_base_kg_per_ml: carbonEmissionPerMl,
-            total_carbon_emission_kg: carbonEmissionPerMl
-              ? (carbonEmissionPerMl * item.volumeMl) / 1000
-              : null,
-          })
+          .insert(receiptItemData)
           .select()
           .single();
 
         if (itemError) {
-          console.error("Supabase error (receipt_item):", itemError);
-          throw itemError;
+          console.error("Supabase error (receipt_item):", JSON.stringify(itemError, null, 2));
+          // 실제 Supabase 오류 메시지와 함께 오류 전달
+          const errorMessage = itemError.message || itemError.details || "영수증 아이템 저장 중 오류가 발생했습니다.";
+          throw new Error(errorMessage);
         }
 
         return receiptItem as ReceiptItem;
@@ -93,10 +138,12 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 },
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("❌ 결제 처리 오류:", error);
+    // 실제 오류 메시지 전달
+    const errorMessage = error?.message || error?.details || "결제 데이터 저장 중 오류가 발생했습니다.";
     return NextResponse.json(
-      { error: "결제 데이터 저장 중 오류가 발생했습니다." },
+      { error: errorMessage },
       { status: 500 },
     );
   }

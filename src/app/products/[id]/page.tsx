@@ -7,7 +7,6 @@ async function getProduct(id: string): Promise<Product> {
     name: "상품명 없음",
     short_description: null,
     brand: null,
-    measure_unit: null,
     ingredients: null,
     environmental_contribution: null,
     category: null,

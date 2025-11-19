@@ -10,8 +10,8 @@ export async function GET() {
       .select(
         `
         product_id,
-        purchase_quantity_ml,
-        purchase_unit_price_원_per_ml,
+        "purchase_quantity (ml)",
+        "purchase_unit_price (원/ml)",
         product:product_id (
           id,
           name
@@ -33,7 +33,7 @@ export async function GET() {
 
       const product = item.product;
       const amount =
-        (item.purchase_quantity_ml || 0) * (item.purchase_unit_price_원_per_ml || 0);
+        (item["purchase_quantity (ml)"] || 0) * (item["purchase_unit_price (원/ml)"] || 0);
 
       if (salesByProduct.has(productId)) {
         const existing = salesByProduct.get(productId)!;

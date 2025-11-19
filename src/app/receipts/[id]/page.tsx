@@ -15,27 +15,13 @@ type ReceiptWithItems = Receipt & {
 async function getReceipt(id: string): Promise<ReceiptWithItems | null> {
   try {
     const res = await fetch(`${getBaseUrl()}/api/receipts/${id}`, { cache: "no-store" });
-    
     if (!res.ok) {
       if (res.status === 404) return null;
-      const errorData = await res.json().catch(() => ({}));
-      console.error("API error:", errorData);
-      return null;
+      throw new Error("Failed to fetch receipt");
     }
-    
     const data = await res.json();
-    
-    // 응답에 error 필드가 있는 경우
-    if (data && typeof data === "object" && "error" in data) {
-      console.error("API 응답에 에러 포함:", data.error);
-      return null;
-    }
-    
     // 응답이 null이거나 유효하지 않은 경우
-    if (!data || typeof data !== "object") {
-      return null;
-    }
-    
+    if (!data || typeof data !== "object") return null;
     return data;
   } catch (error) {
     console.error("Error fetching receipt:", error);
@@ -82,8 +68,14 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
   const { id } = await params;
   const receipt = await getReceipt(id);
 
+  // 콘솔에 영수증 데이터 출력
+  console.log("=== 영수증 데이터 ===");
+  console.log("영수증 ID:", id);
+  console.log("영수증 데이터:", JSON.stringify(receipt, null, 2));
+
   // 영수증이 없을 경우
   if (!receipt || typeof receipt !== "object" || !("id" in receipt)) {
+    console.log("영수증을 찾을 수 없습니다.");
     return (
       <main className="mx-auto max-w-2xl px-6 py-10">
         <div className="max-w-[393px] mx-auto bg-white px-5 py-6 flex flex-col gap-6 items-center justify-center min-h-[400px]">
@@ -97,10 +89,21 @@ export default async function ReceiptPage({ params }: { params: Promise<{ id: st
   const customer = await getCustomer(receipt.customer_id ?? null);
   const customerName = customer?.name || "고객";
 
+  // 콘솔에 고객 데이터 출력
+  console.log("=== 고객 데이터 ===");
+  console.log("고객 ID:", receipt.customer_id);
+  console.log("고객 데이터:", JSON.stringify(customer, null, 2));
+  console.log("고객 이름:", customerName);
+
   // TODO: 리필/상품 구분 - 카테고리별로 구분 필요
   // 현재는 모든 아이템을 리필 섹션에 표시
   const refillItems = receipt.items || [];
   const productItems: typeof receipt.items = [];
+
+  // 콘솔에 아이템 데이터 출력
+  console.log("=== 아이템 데이터 ===");
+  console.log("아이템 개수:", refillItems.length);
+  console.log("아이템 목록:", JSON.stringify(refillItems, null, 2));
 
   return (
     <main className="mx-auto max-w-2xl px-6 py-10">

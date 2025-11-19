@@ -2,6 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error(
@@ -47,3 +48,35 @@ export const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
   //   fetch: customFetch, // Supabase JS v2에서는 직접 fetch 옵션 지원이 제한적
   // },
 });
+
+/**
+ * 서버 사이드에서만 사용하는 Supabase 클라이언트입니다.
+ * Service Role Key를 사용하여 RLS(Row Level Security)를 우회합니다.
+ * 
+ * ⚠️ 이 클라이언트는 절대 클라이언트 번들에 포함되면 안 됩니다.
+ *     서버 사이드 API Route에서만 사용하세요.
+ */
+export const supabaseServerClient = (() => {
+  // 서버 사이드에서만 실행
+  if (typeof window !== 'undefined') {
+    throw new Error('supabaseServerClient는 서버 사이드에서만 사용할 수 있습니다.');
+  }
+
+  // Service Role Key가 없으면 Anon Key를 사용 (경고 메시지와 함께)
+  const key = supabaseServiceRoleKey || supabaseAnonKey;
+  
+  if (!supabaseServiceRoleKey) {
+    console.warn(
+      '⚠️ SUPABASE_SERVICE_ROLE_KEY가 설정되지 않았습니다. ' +
+      'RLS 정책으로 인해 서버 사이드 작업이 실패할 수 있습니다. ' +
+      'Service Role Key를 설정하거나 Supabase에서 RLS 정책을 확인하세요.'
+    );
+  }
+
+  return createClient(supabaseUrl, key, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
+    },
+  });
+})();

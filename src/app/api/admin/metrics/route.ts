@@ -36,17 +36,17 @@ export async function GET() {
     const totalRefills =
       loyalties?.reduce((sum, l) => sum + (l.total_refill_count || 0), 0) || 0;
 
-    // 총 탄소 절감량 (receipt_item의 total_carbon_emission_kg 합계)
+    // 총 탄소 절감량 (receipt_item의 total_carbon_emission (kg) 합계)
     const { data: receiptItems, error: itemsError } = await supabaseClient
       .from("receipt_item")
-      .select("total_carbon_emission_kg");
+      .select('"total_carbon_emission (kg)"');
 
     if (itemsError) {
       console.error("Supabase error (receipt_items):", itemsError);
     }
 
     const co2SavedKg =
-      receiptItems?.reduce((sum, item) => sum + (item.total_carbon_emission_kg || 0), 0) || 0;
+      receiptItems?.reduce((sum, item) => sum + (item["total_carbon_emission (kg)"] || 0), 0) || 0;
 
     return NextResponse.json({
       totalCustomers: totalCustomers || 0,
