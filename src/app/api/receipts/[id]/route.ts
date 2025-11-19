@@ -19,7 +19,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
       .single();
 
     if (receiptError) {
-      console.error("Supabase error:", receiptError);
+      console.error("Supabase error (receipt):", receiptError);
       return NextResponse.json({ error: "영수증을 찾을 수 없습니다." }, { status: 404 });
     }
 
@@ -38,7 +38,7 @@ export async function GET(_: Request, { params }: { params: Promise<{ id: string
       .eq("receipt_id", receiptId);
 
     if (itemsError) {
-      console.error("Supabase error:", itemsError);
+      console.error("Supabase error (receipt_item):", itemsError);
       return NextResponse.json({ error: "영수증 항목 조회 중 오류가 발생했습니다." }, { status: 500 });
     }
 
