@@ -39,14 +39,14 @@ export async function GET() {
     // 총 탄소 절감량 (receipt_item의 total_carbon_emission (kg) 합계)
     const { data: receiptItems, error: itemsError } = await supabaseClient
       .from("receipt_item")
-      .select('"total_carbon_emission (kg)"');
+      .select('"total_carbon_emission"');
 
     if (itemsError) {
       console.error("Supabase error (receipt_items):", itemsError);
     }
 
     const co2SavedKg =
-      receiptItems?.reduce((sum, item) => sum + (item["total_carbon_emission (kg)"] || 0), 0) || 0;
+      receiptItems?.reduce((sum, item) => sum + (item["total_carbon_emission"] || 0), 0) || 0;
 
     return NextResponse.json({
       totalCustomers: totalCustomers || 0,
