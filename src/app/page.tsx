@@ -36,6 +36,12 @@ export default function Home() {
           >
             카카오 로그인
           </Link>
+          <Link
+            href="/mypage?phone=01012345678"
+            className="inline-flex items-center justify-center rounded-md bg-sky-600 px-4 py-3 text-sm font-semibold text-white hover:bg-sky-500"
+          >
+            마이페이지
+          </Link>
         </div>
       </div>
     </main>

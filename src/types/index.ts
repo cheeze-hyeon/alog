@@ -3,6 +3,14 @@ export type { CustomerLoyalty } from "./customer_loyalty";
 export type { Product, ProductCategory } from "./product";
 export type { Receipt, ReceiptItem } from "./receipt";
 export type { CartItem } from "./cart";
+export type { Badge, BadgeCategory } from "./badge";
+export type {
+  CustomerMyPageData,
+  EnvironmentStats,
+  CharacterLevel,
+  CharacterProgress,
+  PurchaseItem,
+} from "./mypage";
 export type {
   GetCustomerByPhoneQuery,
   GetCustomerByIdQuery,
