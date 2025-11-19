@@ -51,7 +51,7 @@ export default function OrderPanel({
           cart.map((row, index) => (
             <div
               key={row.id}
-              className="w-full min-h-[88px] p-3 rounded-[10px] bg-[#f2f2f7] relative flex items-center"
+              className="w-full min-h-[88px] px-5 py-3 rounded-[10px] bg-[#f2f2f7] relative flex items-center"
             >
               {/* 제품명 + 가격 정보 - 수직 중앙 정렬 */}
               <div className="flex-1 flex flex-col justify-center gap-0.5 min-w-0">

@@ -9,9 +9,22 @@ import QuantityModal, { Unit } from "@/components/POS/QuantityModal";
 import CustomerPhoneModal from "@/components/POS/CustomerPhoneModal";
 import NoCustomerWarningModal from "@/components/POS/NoCustomerWarningModal";
 import DataSentSuccessModal from "@/components/POS/DataSentSuccessModal";
-import Header from "@/components/POS/Header";
+import CategorySidebar from "@/components/POS/CategorySidebar";
 
 type CartRow = CartItem & { id: string };
+
+const CATEGORY_LABELS: Record<ProductCategory, string> = {
+  shampoo: "샴푸",
+  conditioner: "컨디셔너",
+  body_handwash: "바디워시/핸드워시",
+  lotion_oil: "로션/오일",
+  cream_balm_gel_pack: "크림/밤/젤/팩",
+  cleansing: "클렌징 제품",
+  detergent: "세제",
+  snack_drink_base: "간식 및 음료 베이스",
+  cooking_ingredient: "요리용 식재료",
+  tea: "차류",
+};
 
 function CheckoutContent() {
   const router = useRouter();
@@ -284,6 +297,21 @@ function CheckoutContent() {
     return normalized;
   };
 
+  // 🔸 로고 클릭 시 초기화 처리
+  const handleLogoClick = () => {
+    // 고객 정보 초기화
+    setCustomer(null);
+    setCustomerPhone(null);
+    // 장바구니 초기화
+    setCart([]);
+    // localStorage 초기화
+    localStorage.removeItem("customerPhone");
+    localStorage.removeItem("cart");
+    localStorage.removeItem("total");
+    // 검색어 초기화 (선택사항)
+    setSearchQuery("");
+  };
+
   // 🔸 고객 전화번호 저장 처리
   const handleCustomerPhoneSave = async (phone: string) => {
     if (phone.length < 10) {
@@ -322,26 +350,123 @@ function CheckoutContent() {
   };
 
   return (
-    <main className="h-screen bg-[#F2F2F7] flex flex-col lg:flex-row overflow-hidden">
-      {/* 왼쪽 영역: Header + CatalogPanel */}
+    <main className="h-screen bg-[#F2F2F7] flex flex-row overflow-hidden">
+      {/* 왼쪽 영역: 헤더 + 사이드바 + CatalogPanel */}
       <div className="flex-1 flex flex-col min-w-0 min-h-0 overflow-hidden">
-        {/* 헤더 */}
-        <Header searchQuery={searchQuery} onSearchChange={setSearchQuery} />
+        {/* 헤더 - 왼쪽 영역만 */}
+        <div className="w-full bg-[#F2F2F7] px-4 md:px-8 pt-6 md:pt-8 pb-2 md:pb-4 flex items-center gap-4 md:gap-6 lg:gap-8">
+          {/* 왼쪽: 로고 + 상점명 + 날짜 */}
+          <div className="flex items-center gap-4 flex-shrink-0">
+            {/* 로고 */}
+            <button
+              onClick={handleLogoClick}
+              className="cursor-pointer hover:opacity-80 transition-opacity"
+              aria-label="초기화"
+            >
+              <img
+                src="/almang_logo.png"
+                alt="알맹상점 로고"
+                className="w-12 h-12 md:w-16 md:h-16 rounded-full object-cover shadow-sm"
+              />
+            </button>
 
-        {/* 상품 카탈로그 */}
-        <div className="flex-1 min-w-0 overflow-y-auto px-4 md:px-6 lg:px-8 pt-2 md:pt-4 pb-4 md:pb-6 lg:pb-8">
-          <CatalogPanel
-            products={products}
-            activeCat={activeCat}
-            onChangeCat={setActiveCat}
-            onPick={pickProduct}
-            searchQuery={searchQuery}
-          />
+            {/* 상점명 + 날짜 */}
+            <div className="flex flex-col">
+              <h1 className="text-xl md:text-2xl font-bold text-black">알맹상점</h1>
+              <p className="text-sm md:text-base text-black">
+                {new Date().toLocaleDateString("ko-KR", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  weekday: "long",
+                })}
+              </p>
+            </div>
+          </div>
+
+          {/* 검색창 */}
+          <div className="flex-1 md:max-w-[28rem] lg:max-w-[32rem] ml-auto">
+            <div className="relative flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="상품 검색"
+                  className="w-full px-4 py-3.5 pl-10 pr-10 rounded-lg bg-white border-2 border-[#e75251] text-sm text-[#e75251] placeholder:text-[#e75251] placeholder:opacity-60 focus:outline-none focus:ring-2 focus:ring-[#e75251] focus:border-[#e75251] transition-all"
+                />
+                <svg
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#e75251] pointer-events-none"
+                  fill="none"
+                  viewBox="0 0 20 20"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M4.16667 9.16667C4.16667 6.40917 6.40917 4.16667 9.16667 4.16667C11.9242 4.16667 14.1667 6.40917 14.1667 9.16667C14.1667 11.9242 11.9242 14.1667 9.16667 14.1667C6.40917 14.1667 4.16667 11.9242 4.16667 9.16667ZM17.2558 16.0775L14.4267 13.2475C15.3042 12.1192 15.8333 10.705 15.8333 9.16667C15.8333 5.49083 12.8425 2.5 9.16667 2.5C5.49083 2.5 2.5 5.49083 2.5 9.16667C2.5 12.8425 5.49083 15.8333 9.16667 15.8333C10.705 15.8333 12.1192 15.3042 13.2475 14.4267L16.0775 17.2558C16.24 17.4183 16.4533 17.5 16.6667 17.5C16.88 17.5 17.0933 17.4183 17.2558 17.2558C17.5817 16.93 17.5817 16.4033 17.2558 16.0775Z"
+                    fill="#E75251"
+                  />
+                </svg>
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center text-[#e75251] hover:text-[#d43f3e] transition-colors"
+                    aria-label="검색어 지우기"
+                  >
+                    <svg
+                      className="w-full h-full"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* 헤더 아래: 사이드바 + CatalogPanel을 독립적인 둥근 사각형으로 */}
+        <div className="flex-1 flex flex-row min-w-0 min-h-0 overflow-hidden pt-2 md:pt-3 pb-4 md:pb-6 px-4 md:px-6 lg:px-8 gap-0">
+          {/* 카테고리 사이드바 - 독립적인 둥근 사각형 */}
+          <div className="flex-shrink-0 rounded-lg shadow-lg overflow-hidden">
+            <CategorySidebar activeCat={activeCat} onChangeCat={setActiveCat} />
+          </div>
+
+          {/* CatalogPanel - 독립적인 둥근 사각형 */}
+          <div className="flex-1 min-w-0 min-h-0 overflow-hidden bg-white rounded-lg shadow-lg flex flex-col">
+            {/* 카테고리 이름 - 고정 */}
+            <div className="flex-shrink-0 pt-4 md:pt-6 pb-4 md:pb-6 px-4 md:px-6 lg:px-8 flex items-center gap-3 md:gap-4">
+              {/* 빨간색 세로 바 */}
+              <div className="w-1 h-6 md:h-8 bg-[#E75251] rounded-full flex-shrink-0"></div>
+              <h2 className="text-2xl md:text-3xl font-semibold text-black">
+                {activeCat === "all" ? "전체" : CATEGORY_LABELS[activeCat as ProductCategory]}
+              </h2>
+            </div>
+            {/* 상품 그리드 - 스크롤 가능 */}
+            <div className="flex-1 min-w-0 min-h-0 overflow-y-auto px-4 md:px-6 lg:px-8 pb-4 md:pb-6 lg:pb-8">
+              <CatalogPanel
+                products={products}
+                activeCat={activeCat}
+                onChangeCat={setActiveCat}
+                onPick={pickProduct}
+                searchQuery={searchQuery}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* 우측 주문 패널 - 오른쪽 전체 column */}
-      <div className="w-full lg:w-[400px] xl:w-[450px] flex-shrink-0 flex flex-col min-h-0">
+      {/* 우측 주문 패널 - 오른쪽 전체 높이 (헤더부터) */}
+      <div className="w-full lg:w-[460px] xl:w-[518px] flex-shrink-0 flex flex-col min-h-0 h-full">
         <OrderPanel
           customer={customer}
           customerPhone={customerPhone}

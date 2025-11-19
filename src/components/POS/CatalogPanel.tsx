@@ -88,55 +88,11 @@ export default function CatalogPanel({
   };
 
   return (
-    <div className="w-full pl-2 md:pl-3 lg:pl-4">
-      {/* 상단 카테고리 탭 */}
-      <div className="mb-6 md:mb-8">
-        <div className="relative">
-          <div className="overflow-x-auto pb-2 -mx-2 md:-mx-3 lg:-mx-4 px-2 md:px-3 lg:px-4 scrollbar-hide">
-            <div className="flex gap-4 md:gap-6 lg:gap-8 min-w-max">
-              {/* 전체 탭 */}
-              <div className="h-[33px] relative flex-shrink-0">
-                <button
-                  onClick={() => onChangeCat("all")}
-                  className={`text-sm font-semibold text-left whitespace-nowrap transition-colors ${
-                    currentActiveCat === "all"
-                      ? "text-[#e75251]"
-                      : "text-black hover:text-[#e75251]"
-                  }`}
-                >
-                  전체
-                </button>
-                {currentActiveCat === "all" && (
-                  <div className="absolute left-0 right-0 top-[30px] h-0.5 bg-[#E75251]"></div>
-                )}
-              </div>
-              {Object.entries(CATEGORY_LABELS).map(([key, label]) => {
-                const isActive = currentActiveCat === key;
-                return (
-                  <div key={key} className="h-[33px] relative flex-shrink-0">
-                    <button
-                      onClick={() => onChangeCat(key as ProductCategory)}
-                      className={`text-sm font-semibold text-left whitespace-nowrap transition-colors ${
-                        isActive ? "text-[#e75251]" : "text-black hover:text-[#e75251]"
-                      }`}
-                    >
-                      {label}
-                    </button>
-                    {isActive && (
-                      <div className="absolute left-0 right-0 top-[30px] h-0.5 bg-[#E75251]"></div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          <div className="absolute left-0 right-0 top-[32px] h-px bg-[#393C49] pointer-events-none"></div>
-        </div>
-      </div>
+    <div className="w-full">
 
       {/* 검색 결과 표시 */}
       {searchQuery.trim() && (
-        <div className="mb-4 px-2 md:px-3 lg:px-4">
+        <div className="mb-4">
           <p className="text-sm md:text-base text-gray-600">
             <span className="font-semibold text-[#e75251]">"{searchQuery}"</span>
             {currentActiveCat !== "all" && (
@@ -157,7 +113,7 @@ export default function CatalogPanel({
 
       {/* 상품 카드 그리드 */}
       {filtered.length === 0 ? (
-        <p className="text-slate-400 text-sm mt-6 px-2 md:px-3 lg:px-4">
+        <p className="text-slate-400 text-sm mt-6">
           {searchQuery.trim()
             ? currentActiveCat !== "all"
               ? `"${searchQuery}"에 대한 ${CATEGORY_LABELS[currentActiveCat as ProductCategory]} 검색 결과가 없습니다.`
@@ -167,7 +123,7 @@ export default function CatalogPanel({
               : `${CATEGORY_LABELS[currentActiveCat as ProductCategory]} 카테고리에 등록된 상품이 없습니다.`}
         </p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 lg:gap-7">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-7">
           {filtered.map((p) => {
             // current_price는 g당 단가
             const unitPricePerG = p.current_price || 0;
@@ -175,20 +131,23 @@ export default function CatalogPanel({
               <button
                 key={p.id}
                 onClick={() => onPick(p)}
-                className="relative bg-white rounded-2xl shadow-sm hover:shadow-md transition-shadow p-4 md:p-6 flex flex-col items-center min-h-[140px]"
+                className="relative bg-[#F2F2F7] rounded-2xl shadow-sm hover:shadow-md transition-shadow p-4 md:p-6 flex flex-col items-center min-h-[140px]"
               >
                 {/* 브랜드명 */}
-                <p className="text-sm font-medium text-black mb-2 text-center min-h-[1.25rem]">
+                <p className="text-sm font-medium text-[#747474] mb-2 text-center min-h-[1.25rem]">
                   {p.brand || "\u00A0"}
                 </p>
 
                 {/* 제품명 */}
-                <p className="text-sm md:text-base font-medium text-black mb-2 text-center line-clamp-2">
+                <p 
+                  className="text-sm md:text-base font-medium text-black mb-2 text-center line-clamp-2 h-[2.5rem] md:h-[3rem] flex items-center justify-center"
+                  style={{ wordBreak: 'keep-all' }}
+                >
                   {p.name || "상품명 없음"}
                 </p>
 
                 {/* 단가 */}
-                <p className="text-sm text-black text-center mt-auto">
+                <p className="text-sm text-[#E04F4E] text-center mt-auto">
                   {formatUnitPrice(unitPricePerG)}
                 </p>
               </button>

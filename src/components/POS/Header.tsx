@@ -35,7 +35,7 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
   };
 
   return (
-    <header className="w-full bg-[#F2F2F7] px-4 md:px-8 py-4 md:py-6">
+    <header className="w-full bg-white px-4 md:px-8 py-4 md:py-6">
       <div className="flex items-center gap-4 md:gap-6 lg:gap-8">
         {/* 왼쪽: 로고 + 상점명 + 날짜 */}
         <div className="flex items-center gap-4 flex-shrink-0">
@@ -55,48 +55,50 @@ export default function Header({ searchQuery, onSearchChange }: HeaderProps) {
 
         {/* 검색창 */}
         <div className="flex-1 md:max-w-[28rem] lg:max-w-[32rem] ml-auto">
-          <div className="relative">
-            <input
-              type="text"
-              value={localQuery}
-              onChange={handleInputChange}
-              placeholder="상품명, 브랜드로 검색"
-              className="w-full px-4 py-2.5 md:py-3 pl-10 pr-10 rounded-lg bg-[#E3E3E8] border-0 text-sm md:text-base text-[#e75251] placeholder:text-[#e75251] placeholder:opacity-60 focus:outline-none focus:ring-2 focus:ring-[#e75251] focus:border-transparent transition-all"
-            />
-            <svg
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 md:w-5 md:h-5 text-[#e75251] pointer-events-none"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+          <div className="relative flex items-center gap-2">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={localQuery}
+                onChange={handleInputChange}
+                placeholder="상품 검색"
+                className="w-full px-4 py-3.5 pl-10 pr-10 rounded-lg bg-white border-2 border-[#e75251] text-sm text-[#e75251] placeholder:text-[#e75251] placeholder:opacity-60 focus:outline-none focus:ring-2 focus:ring-[#e75251] focus:border-[#e75251] transition-all"
               />
-            </svg>
-            {localQuery && (
-              <button
-                onClick={handleClear}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center text-[#e75251] hover:text-[#d43f3e] transition-colors"
-                aria-label="검색어 지우기"
+              <svg
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-[#e75251] pointer-events-none"
+                fill="none"
+                viewBox="0 0 20 20"
+                xmlns="http://www.w3.org/2000/svg"
               >
-                <svg
-                  className="w-full h-full"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M4.16667 9.16667C4.16667 6.40917 6.40917 4.16667 9.16667 4.16667C11.9242 4.16667 14.1667 6.40917 14.1667 9.16667C14.1667 11.9242 11.9242 14.1667 9.16667 14.1667C6.40917 14.1667 4.16667 11.9242 4.16667 9.16667ZM17.2558 16.0775L14.4267 13.2475C15.3042 12.1192 15.8333 10.705 15.8333 9.16667C15.8333 5.49083 12.8425 2.5 9.16667 2.5C5.49083 2.5 2.5 5.49083 2.5 9.16667C2.5 12.8425 5.49083 15.8333 9.16667 15.8333C10.705 15.8333 12.1192 15.3042 13.2475 14.4267L16.0775 17.2558C16.24 17.4183 16.4533 17.5 16.6667 17.5C16.88 17.5 17.0933 17.4183 17.2558 17.2558C17.5817 16.93 17.5817 16.4033 17.2558 16.0775Z"
+                  fill="#E75251"
+                />
+              </svg>
+              {localQuery && (
+                <button
+                  onClick={handleClear}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 flex items-center justify-center text-[#e75251] hover:text-[#d43f3e] transition-colors"
+                  aria-label="검색어 지우기"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            )}
+                  <svg
+                    className="w-full h-full"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
