@@ -12,6 +12,7 @@ function MyPageContent() {
   const [data, setData] = useState<CustomerMyPageData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     const kakaoId = searchParams.get("kakao_id");
@@ -91,20 +92,28 @@ function MyPageContent() {
     );
   }
 
-  return (
-    <main className="min-h-screen bg-white">
-      <div className="max-w-md mx-auto">
-        {/* 헤더 섹션 */}
-        <HeaderSection customer={data.customer} characterProgress={data.characterProgress} />
+      return (
+        <main className="min-h-screen bg-white">
+          <div className="max-w-md mx-auto">
+            {/* 헤더 섹션 */}
+            <HeaderSection 
+              customer={data.customer} 
+              characterProgress={data.characterProgress}
+              selectedYear={selectedYear}
+              onYearChange={setSelectedYear}
+            />
 
-        {/* 환경 영향 섹션 */}
-        <EnvironmentSection stats={data.stats} />
+            {/* 환경 영향 섹션 */}
+            <EnvironmentSection stats={data.stats} />
 
-        {/* 구매 내역 섹션 */}
-        <BadgesSection purchaseItems={data.purchaseItems} />
-      </div>
-    </main>
-  );
+            {/* 구매 내역 섹션 */}
+            <BadgesSection 
+              purchaseItems={data.purchaseItems}
+              selectedYear={selectedYear}
+            />
+          </div>
+        </main>
+      );
 }
 
 export default function MyPage() {

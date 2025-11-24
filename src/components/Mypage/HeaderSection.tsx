@@ -4,18 +4,27 @@ import type { Customer, CharacterProgress } from "@/types";
 interface HeaderSectionProps {
   customer: Customer;
   characterProgress: CharacterProgress;
+  selectedYear: number;
+  onYearChange: (year: number) => void;
 }
 
-export default function HeaderSection({ customer, characterProgress }: HeaderSectionProps) {
-  const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
+export default function HeaderSection({ customer, characterProgress, selectedYear, onYearChange }: HeaderSectionProps) {
+  const [currentYear, setCurrentYear] = useState(selectedYear);
+  
+  // selectedYear가 외부에서 변경되면 currentYear도 동기화
+  useEffect(() => {
+    setCurrentYear(selectedYear);
+  }, [selectedYear]);
   const [isYearPickerOpen, setIsYearPickerOpen] = useState(false);
   const [isLevelModalOpen, setIsLevelModalOpen] = useState(false);
   const pickerRef = useRef<HTMLDivElement>(null);
   const levelModalRef = useRef<HTMLDivElement>(null);
 
-  // 년도 리스트 생성 (현재 년도 기준 앞뒤로)
+  // 년도 리스트 생성 (2015년부터 올해까지)
   const currentYearBase = new Date().getFullYear();
-  const years = Array.from({ length: 51 }, (_, i) => currentYearBase - 15 + i); // 현재 년도 기준 앞 15년, 뒤 35년
+  const startYear = 2015;
+  const endYear = currentYearBase;
+  const years = Array.from({ length: endYear - startYear + 1 }, (_, i) => startYear + i);
 
   // 외부 클릭 시 핸들러 닫기
   useEffect(() => {
@@ -91,7 +100,11 @@ export default function HeaderSection({ customer, characterProgress }: HeaderSec
           {/* 년도 선택 */}
           <div className="relative flex items-center justify-center gap-2">
             <button
-              onClick={() => setCurrentYear(currentYear - 1)}
+              onClick={() => {
+                const newYear = currentYear - 1;
+                setCurrentYear(newYear);
+                onYearChange(newYear);
+              }}
               className="w-[9px] h-[11px] flex items-center justify-center"
               aria-label="이전 년도"
             >
@@ -119,7 +132,11 @@ export default function HeaderSection({ customer, characterProgress }: HeaderSec
               <span className="text-[15px] font-medium text-black/70">년</span>
             </button>
             <button
-              onClick={() => setCurrentYear(currentYear + 1)}
+              onClick={() => {
+                const newYear = currentYear + 1;
+                setCurrentYear(newYear);
+                onYearChange(newYear);
+              }}
               className="w-[9px] h-[11px] flex items-center justify-center"
               aria-label="다음 년도"
             >
@@ -150,6 +167,7 @@ export default function HeaderSection({ customer, characterProgress }: HeaderSec
                       key={year}
                       onClick={() => {
                         setCurrentYear(year);
+                        onYearChange(year);
                         setIsYearPickerOpen(false);
                       }}
                       className={`w-full px-4 py-2 text-center text-[15px] font-medium rounded hover:bg-gray-100 transition-colors ${

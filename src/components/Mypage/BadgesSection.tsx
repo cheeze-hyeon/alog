@@ -1,25 +1,59 @@
 import type { PurchaseItem } from "@/types";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 
 interface BadgesSectionProps {
   purchaseItems: PurchaseItem[];
+  selectedYear: number;
 }
 
-export default function BadgesSection({ purchaseItems }: BadgesSectionProps) {
+const INITIAL_DISPLAY_COUNT = 5; // 초기에 표시할 항목 수
+const LOAD_MORE_COUNT = 5; // 더 불러오기 클릭 시 추가로 표시할 항목 수
+
+export default function BadgesSection({ purchaseItems, selectedYear }: BadgesSectionProps) {
   const [clickedItemId, setClickedItemId] = useState<number | null>(null);
-  // 날짜별로 그룹화
-  const groupedByDate = useMemo(() => {
+  const [displayCount, setDisplayCount] = useState(INITIAL_DISPLAY_COUNT);
+  
+  // 선택된 연도에 해당하는 구매 내역만 필터링
+  const filteredItems = useMemo(() => {
+    return purchaseItems.filter((item) => {
+      // visitDate는 YYYY.MM.DD 형식이므로 연도 추출
+      const itemYear = parseInt(item.visitDate.split('.')[0], 10);
+      return itemYear === selectedYear;
+    });
+  }, [purchaseItems, selectedYear]);
+
+  // 연도가 변경되면 displayCount 리셋
+  useEffect(() => {
+    setDisplayCount(INITIAL_DISPLAY_COUNT);
+  }, [selectedYear]);
+
+  // 표시할 항목 수 계산 (날짜별 그룹을 고려)
+  const flattenedItems = useMemo(() => {
+    return filteredItems;
+  }, [filteredItems]);
+
+  const displayedItems = useMemo(() => {
+    return flattenedItems.slice(0, displayCount);
+  }, [flattenedItems, displayCount]);
+
+  // 표시된 항목들을 다시 날짜별로 그룹화
+  const displayedGroupedByDate = useMemo(() => {
     const groups: Record<string, PurchaseItem[]> = {};
-    purchaseItems.forEach((item) => {
-      const dateKey = item.visitDate; // YYYY.MM.DD 형식
+    displayedItems.forEach((item) => {
+      const dateKey = item.visitDate;
       if (!groups[dateKey]) {
         groups[dateKey] = [];
       }
       groups[dateKey].push(item);
     });
-    // 날짜순 정렬 (최신순)
     return Object.entries(groups).sort((a, b) => b[0].localeCompare(a[0]));
-  }, [purchaseItems]);
+  }, [displayedItems]);
+
+  const hasMore = displayCount < flattenedItems.length;
+
+  const handleLoadMore = () => {
+    setDisplayCount((prev) => prev + LOAD_MORE_COUNT);
+  };
 
   return (
     <div className="w-full bg-white px-4 pt-2 pb-6">
@@ -30,12 +64,12 @@ export default function BadgesSection({ purchaseItems }: BadgesSectionProps) {
         <p className="text-xs text-black/50 mb-4">구매 내역 확인</p>
 
         {/* 구매 내역 리스트 */}
-        {purchaseItems.length > 0 ? (
+        {filteredItems.length > 0 ? (
           <div className="space-y-0">
             {/* '구매 내역 확인'과 첫 번째 영수증 사이 점선 구분선 */}
             <div className="border-t border-dashed border-[#959595]/30 mb-4" />
             
-            {groupedByDate.map(([date, items], groupIndex) => (
+            {displayedGroupedByDate.map(([date, items], groupIndex) => (
               <div key={date}>
                 {/* 날짜 구분선 (첫 번째 그룹이 아닌 경우) */}
                 {groupIndex > 0 && (
@@ -118,6 +152,18 @@ export default function BadgesSection({ purchaseItems }: BadgesSectionProps) {
                 ))}
               </div>
             ))}
+
+            {/* 더 불러오기 버튼 */}
+            {hasMore && (
+              <div className="mt-6 flex justify-center">
+                <button
+                  onClick={handleLoadMore}
+                  className="px-6 py-2 rounded-lg border border-[#959595]/50 text-sm text-black/70 hover:bg-gray-50 transition-colors"
+                >
+                  더 불러오기
+                </button>
+              </div>
+            )}
           </div>
         ) : (
           <div className="w-full py-12 flex items-center justify-center">
