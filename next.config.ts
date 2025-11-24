@@ -1,16 +1,23 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  // Production 빌드에서 eval 사용 방지 (CSP 오류 해결)
-  webpack: (config, { dev, isServer }) => {
-    // Production 빌드에서는 source map을 'source-map'으로 설정하거나 비활성화
-    if (!dev && !isServer) {
-      config.devtool = false; // 또는 'source-map' 사용 가능
-    }
-    return config;
-  },
-  // Production 빌드 최적화
-  productionBrowserSourceMaps: false, // Production에서 소스맵 비활성화
+  // Production 빌드에서 소스맵 비활성화 (eval 사용 방지)
+  productionBrowserSourceMaps: false,
+  
+  // CSP 헤더 설정 (선택사항 - 서버에서 CSP를 설정하지 않는 경우)
+  // headers: async () => {
+  //   return [
+  //     {
+  //       source: '/:path*',
+  //       headers: [
+  //         {
+  //           key: 'Content-Security-Policy',
+  //           value: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline';",
+  //         },
+  //       ],
+  //     },
+  //   ];
+  // },
 };
 
 export default nextConfig;
