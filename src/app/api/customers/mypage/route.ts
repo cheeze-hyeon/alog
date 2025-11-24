@@ -156,14 +156,14 @@ export async function GET(request: NextRequest) {
       if (receiptItems && receiptItems.length > 0) {
         const productIds = [...new Set(receiptItems.map((item) => item.product_id).filter(Boolean))];
 
-        let products: Product[] = [];
+        let products: any[] = [];
         if (productIds.length > 0) {
           const { data: productData } = await supabaseServerClient
             .from("product")
-            .select("id, name, category")
+            .select("id, name, category, is_refill")
             .in("id", productIds);
 
-          products = (productData || []) as Product[];
+          products = (productData || []) as any[];
         }
 
         const productMap = new Map(products.map((p) => [p.id, p]));
@@ -189,27 +189,42 @@ export async function GET(request: NextRequest) {
           const day = visitDate.getDate().toString().padStart(2, "0");
           const dateStr = `${year}${month}${day}`;
 
-          const quantity = item["purchase_quantity"] || 0;
-          const unitPrice = item["purchase_unit_price"] || 0;
+          // 날짜를 YYYY.MM.DD 형식으로 변환 (표시용)
+          const fullYear = visitDate.getFullYear();
+          const visitDateStr = `${fullYear}.${month}.${day}`;
+
+          const quantity = item["purchase_quantity"] || 0; // g 단위
+          const unitPrice = item["purchase_unit_price"] || 0; // 원/g
           const price = Math.round(quantity * unitPrice);
 
           console.log(`📋 Purchase item: ${product?.name || "Unknown"}, price: ${price}, date: ${dateStr}`);
 
-          // 카테고리 기반으로 리필 여부 판단 (임시 로직)
-          // 실제로는 상품의 리필 여부를 확인해야 하지만, 일단 카테고리로 판단
+          // product의 is_refill 필드 사용 (없으면 카테고리 기반으로 판단)
           const category = (product?.category as string) || "";
-          const isRefill = category !== "snack_drink_base" && 
-                          category !== "cooking_ingredient" && 
-                          category !== "tea";
+          const isRefillFromDB = product?.is_refill !== undefined ? product.is_refill : null;
+          const isRefill = isRefillFromDB !== null 
+            ? isRefillFromDB 
+            : (category !== "snack_drink_base" && 
+               category !== "cooking_ingredient" && 
+               category !== "tea");
+
+          // 플라스틱 감축량 계산 (리필 상품의 경우)
+          // 이미지 기준: 200g 샴푸 = 3100g 감축 (약 15.5g/g), 100g 샴푸 = 590g 감축 (약 5.9g/g)
+          // 상품별로 다를 수 있으므로 평균값(약 10g/g) 사용, 추후 상품별 계수로 개선 가능
+          const plasticReductionG = isRefill ? Math.round(quantity * 10) : 0; // 리필 상품만 플라스틱 감축
 
           purchaseItems.push({
             id: item.id,
             date: dateStr,
+            visitDate: visitDateStr,
             productName: product?.name || "상품명 없음",
             productCategory: (category as any) || null,
             price,
+            quantity,
+            unitPrice,
             isRefill,
             type: isRefill ? "refill" : "product",
+            plasticReductionG,
           });
         }
 

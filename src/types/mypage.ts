@@ -12,11 +12,15 @@ export interface EnvironmentStats {
 export interface PurchaseItem {
   id: number;
   date: string; // YYMMDD 형식
+  visitDate: string; // YYYY.MM.DD 형식 (표시용)
   productName: string;
   productCategory: ProductCategory | null;
   price: number;
-  isRefill: boolean; // 리필 여부
+  quantity: number; // 구매량 (g)
+  unitPrice: number; // 단가 (원/g)
+  isRefill: boolean; // 리필 여부 (product.is_refill)
   type: "refill" | "product"; // 리필 또는 일반 상품
+  plasticReductionG: number; // 해당 상품의 플라스틱 감축량 (g)
 }
 
 export interface CharacterGrade {
