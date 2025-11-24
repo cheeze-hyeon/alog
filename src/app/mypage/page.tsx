@@ -56,12 +56,16 @@ function MyPageContent() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-emerald-50 to-slate-50">
+      <main className="min-h-screen bg-white">
         <div className="max-w-2xl mx-auto px-4 py-8">
           <div className="flex items-center justify-center min-h-[60vh]">
             <div className="text-center">
-              <div className="text-4xl mb-4 animate-bounce">🌱</div>
-              <div className="text-slate-600">로딩 중...</div>
+              <img
+                src="/loading_mypage.png"
+                alt="로딩 중"
+                className="w-32 h-32 mx-auto mb-4 animate-pulse"
+              />
+              <div className="text-slate-600">잠시만 기다려주세요!</div>
             </div>
           </div>
         </div>
@@ -107,12 +111,16 @@ export default function MyPage() {
   return (
     <Suspense
       fallback={
-        <main className="min-h-screen bg-gradient-to-b from-emerald-50 to-slate-50">
+        <main className="min-h-screen bg-white">
           <div className="max-w-2xl mx-auto px-4 py-8">
             <div className="flex items-center justify-center min-h-[60vh]">
               <div className="text-center">
-                <div className="text-4xl mb-4 animate-bounce">🌱</div>
-                <div className="text-slate-600">로딩 중...</div>
+                <img
+                  src="/loading_mypage.png"
+                  alt="로딩 중"
+                  className="w-32 h-32 mx-auto mb-4 animate-pulse"
+                />
+                <div className="text-slate-600">잠시만 기다려주세요!</div>
               </div>
             </div>
           </div>

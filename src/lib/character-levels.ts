@@ -1,87 +1,108 @@
 import type { CharacterLevel, CharacterProgress, CharacterGrade } from "@/types/mypage";
 
-// 등급 정의
+// 등급 정의 (5단계)
 export const CHARACTER_GRADES: CharacterGrade[] = [
   {
     grade: 1,
-    name: "새싹",
+    name: "꼬마알맹",
     emoji: "🌱",
     minAmount: 0,
     maxAmount: 50000,
   },
   {
     grade: 2,
-    name: "잎새",
+    name: "유아알맹",
     emoji: "🍃",
     minAmount: 50000,
-    maxAmount: 200000,
+    maxAmount: 150000,
   },
   {
     grade: 3,
-    name: "나무",
+    name: "어린알맹",
     emoji: "🌳",
-    minAmount: 200000,
-    maxAmount: 1000000,
+    minAmount: 150000,
+    maxAmount: 500000,
   },
   {
     grade: 4,
-    name: "지구",
+    name: "학생알맹",
+    emoji: "🌲",
+    minAmount: 500000,
+    maxAmount: 1500000,
+  },
+  {
+    grade: 5,
+    name: "어른알맹",
     emoji: "🌍",
-    minAmount: 1000000,
+    minAmount: 1500000,
     maxAmount: null,
   },
 ];
 
-// 레벨 동적 생성 함수
+// 레벨 동적 생성 함수 (5단계)
 function generateLevels(): CharacterLevel[] {
   const levels: CharacterLevel[] = [];
 
-  // 등급 1: Lv.1 (0~50,000원)
+  // 등급 1: 꼬마알맹 - Lv.1 (0~50,000원)
   levels.push({
     level: 1,
     grade: 1,
-    name: "새싹",
+    name: "꼬마알맹",
     emoji: "🌱",
     minAmount: 0,
     maxAmount: 50000,
   });
 
-  // 등급 2: Lv.2~4 (50,000~200,000원, 5만원 단위)
-  for (let i = 2; i <= 4; i++) {
+  // 등급 2: 유아알맹 - Lv.2~3 (50,000~150,000원, 5만원 단위)
+  for (let i = 2; i <= 3; i++) {
     const minAmount = 50000 + (i - 2) * 50000;
     const maxAmount = minAmount + 50000;
     levels.push({
       level: i,
       grade: 2,
-      name: "잎새",
+      name: "유아알맹",
       emoji: "🍃",
       minAmount,
-      maxAmount: i === 4 ? 200000 : maxAmount,
+      maxAmount: i === 3 ? 150000 : maxAmount,
     });
   }
 
-  // 등급 3: Lv.5~8 (200,000~1,000,000원, 20만원 단위)
-  for (let i = 5; i <= 8; i++) {
-    const minAmount = 200000 + (i - 5) * 200000;
-    const maxAmount = minAmount + 200000;
+  // 등급 3: 어린알맹 - Lv.4~6 (150,000~500,000원, 약 11.7만원 단위, 실제로는 10만원 단위로 조정)
+  for (let i = 4; i <= 6; i++) {
+    const minAmount = 150000 + (i - 4) * 116667; // 약 11.7만원 단위
+    const maxAmount = i === 6 ? 500000 : minAmount + 116667;
     levels.push({
       level: i,
       grade: 3,
-      name: "나무",
+      name: "어린알맹",
       emoji: "🌳",
-      minAmount,
-      maxAmount: i === 8 ? 1000000 : maxAmount,
+      minAmount: Math.round(minAmount),
+      maxAmount: Math.round(maxAmount),
     });
   }
 
-  // 등급 4: Lv.9+ (1,000,000원 이상, 30만원 단위, 무제한)
-  // 최대 50개 레벨까지 생성 (필요시 조정)
-  for (let i = 9; i <= 58; i++) {
-    const minAmount = 1000000 + (i - 9) * 300000;
+  // 등급 4: 학생알맹 - Lv.7~12 (500,000~1,500,000원, 약 16.7만원 단위, 실제로는 20만원 단위로 조정)
+  for (let i = 7; i <= 12; i++) {
+    const minAmount = 500000 + (i - 7) * 166667; // 약 16.7만원 단위
+    const maxAmount = i === 12 ? 1500000 : minAmount + 166667;
     levels.push({
       level: i,
       grade: 4,
-      name: "지구",
+      name: "학생알맹",
+      emoji: "🌲",
+      minAmount: Math.round(minAmount),
+      maxAmount: Math.round(maxAmount),
+    });
+  }
+
+  // 등급 5: 어른알맹 - Lv.13+ (1,500,000원 이상, 30만원 단위, 무제한)
+  // 최대 50개 레벨까지 생성 (필요시 조정)
+  for (let i = 13; i <= 62; i++) {
+    const minAmount = 1500000 + (i - 13) * 300000;
+    levels.push({
+      level: i,
+      grade: 5,
+      name: "어른알맹",
       emoji: "🌍",
       minAmount,
       maxAmount: minAmount + 300000,

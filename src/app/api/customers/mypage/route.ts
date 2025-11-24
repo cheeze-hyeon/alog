@@ -179,9 +179,24 @@ export async function GET(request: NextRequest) {
 
           if (!receipt) continue;
 
-          const visitDate = receipt.visit_date
-            ? new Date(receipt.visit_date)
-            : new Date();
+          // 날짜 파싱 (Supabase에서 받은 날짜는 ISO 문자열 또는 Date 객체일 수 있음)
+          let visitDate: Date;
+          if (!receipt.visit_date) {
+            visitDate = new Date();
+          } else if (receipt.visit_date instanceof Date) {
+            visitDate = receipt.visit_date;
+          } else if (typeof receipt.visit_date === "string") {
+            // ISO 문자열인 경우 그대로 파싱
+            visitDate = new Date(receipt.visit_date);
+          } else {
+            visitDate = new Date();
+          }
+
+          // 유효하지 않은 날짜인 경우 현재 날짜 사용
+          if (isNaN(visitDate.getTime())) {
+            console.warn(`Invalid date for receipt ${receipt.id}:`, receipt.visit_date);
+            visitDate = new Date();
+          }
 
           // 날짜를 YYMMDD 형식으로 변환
           const year = visitDate.getFullYear().toString().slice(-2);
@@ -192,6 +207,8 @@ export async function GET(request: NextRequest) {
           // 날짜를 YYYY.MM.DD 형식으로 변환 (표시용)
           const fullYear = visitDate.getFullYear();
           const visitDateStr = `${fullYear}.${month}.${day}`;
+
+          console.log(`📅 Date parsed: ${receipt.visit_date} -> ${visitDateStr}`);
 
           const quantity = item["purchase_quantity"] || 0; // g 단위
           const unitPrice = item["purchase_unit_price"] || 0; // 원/g

@@ -59,17 +59,21 @@ export default function HeaderSection({ customer, characterProgress }: HeaderSec
 
         {/* 캐릭터 이미지 영역 */}
         <div className="flex flex-col items-center mb-4">
-          {/* 캐릭터 이미지 (임시로 이모지 사용, 추후 실제 이미지로 교체 가능) */}
-          <div className="w-[127px] h-[127px] rounded-full bg-gradient-to-br from-pink-300 to-pink-400 flex items-center justify-center mb-4 shadow-md">
-            <div className="text-6xl">🌱</div>
+          {/* 캐릭터 이미지 (등급별 이미지 사용) */}
+          <div className="w-[127px] h-[127px] rounded-full bg-white flex items-center justify-center mb-4 shadow-md overflow-hidden">
+            <img
+              src={`/grade${currentGrade.grade}.png`}
+              alt={currentGrade.name}
+              className="w-full h-full object-cover"
+            />
           </div>
 
           {/* 레벨 버튼 */}
           <button
             onClick={() => setIsLevelModalOpen(true)}
-            className="w-20 h-[30px] rounded-[20px] border-[0.5px] border-[#e04f4e] flex items-center justify-center mb-4 cursor-pointer hover:bg-[#e04f4e]/5 transition-colors"
+            className="px-4 h-[30px] rounded-[20px] border-[0.5px] border-[#e04f4e] flex items-center justify-center mb-4 cursor-pointer hover:bg-[#e04f4e]/5 transition-colors"
           >
-            <p className="text-[13px] text-[#e04f4e]">
+            <p className="text-[13px] text-[#e04f4e] whitespace-nowrap">
               Lv.{currentLevel.level} {currentGrade.name}
             </p>
           </button>
@@ -185,7 +189,13 @@ export default function HeaderSection({ customer, characterProgress }: HeaderSec
 
             {/* 현재 레벨/등급 정보 */}
             <div className="text-center mb-6">
-              <div className="text-5xl mb-2">{currentGrade.emoji}</div>
+              <div className="w-24 h-24 mx-auto mb-4 rounded-full overflow-hidden bg-white shadow-md">
+                <img
+                  src={`/grade${currentGrade.grade}.png`}
+                  alt={currentGrade.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
               <div className="text-xl font-bold text-black mb-1">
                 Lv.{currentLevel.level} {currentGrade.name}
               </div>
@@ -220,8 +230,15 @@ export default function HeaderSection({ customer, characterProgress }: HeaderSec
               {nextGrade && (
                 <div className="bg-gray-50 rounded-lg p-4">
                   <div className="text-sm font-semibold text-black mb-1">다음 등급</div>
-                  <div className="text-sm text-black/70">
-                    {nextGrade.name} {nextGrade.emoji}까지 {amountToNextGrade.toLocaleString()}원 남음
+                  <div className="flex items-center gap-2 text-sm text-black/70">
+                    <img
+                      src={`/grade${nextGrade.grade}.png`}
+                      alt={nextGrade.name}
+                      className="w-6 h-6 rounded-full object-cover"
+                    />
+                    <span>
+                      {nextGrade.name}까지 {amountToNextGrade.toLocaleString()}원 남음
+                    </span>
                   </div>
                 </div>
               )}
