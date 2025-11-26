@@ -38,10 +38,9 @@ export default function CatalogPanel({
     if (currentActiveCat !== "all") {
       // 통합 카테고리인 경우 세 카테고리 모두 포함
       if (currentActiveCat === "shampoo_conditioner_cleansing") {
-        result = result.filter((p) => 
-          p.category === "shampoo" || 
-          p.category === "conditioner" || 
-          p.category === "cleansing"
+        result = result.filter(
+          (p) =>
+            p.category === "shampoo" || p.category === "conditioner" || p.category === "cleansing",
         );
       } else {
         result = result.filter((p) => p.category === currentActiveCat);
@@ -93,7 +92,6 @@ export default function CatalogPanel({
 
   return (
     <div className="w-full">
-
       {/* 검색 결과 표시 */}
       {searchQuery.trim() && (
         <div className="mb-4">
@@ -102,11 +100,7 @@ export default function CatalogPanel({
             {currentActiveCat !== "all" && (
               <>
                 {" "}
-                (
-                <span className="font-medium">
-                  {getCategoryLabel()}
-                </span>
-                ) 검색 결과
+                (<span className="font-medium">{getCategoryLabel()}</span>) 검색 결과
               </>
             )}
             {currentActiveCat === "all" && " 검색 결과"}{" "}
@@ -143,9 +137,9 @@ export default function CatalogPanel({
                 </p>
 
                 {/* 제품명 */}
-                <p 
+                <p
                   className="text-xs md:text-sm font-medium text-black mb-2 text-center line-clamp-3 min-h-[2.5rem] md:min-h-[3rem] flex items-center justify-center"
-                  style={{ wordBreak: 'keep-all' }}
+                  style={{ wordBreak: "keep-all" }}
                 >
                   {p.name || "상품명 없음"}
                 </p>
