@@ -57,11 +57,56 @@ export default function BadgesSection({ purchaseItems, selectedYear }: BadgesSec
   };
 
   return (
-    <div className="w-full bg-white px-4 pt-2 pb-6">
+    <div className="w-full bg-white px-4 pt-1 pb-6">
       <div className="max-w-md mx-auto">
-        <p className="text-[20px] font-bold text-left text-black/70 mb-2">
-          내가 모은 알맹이들
-        </p>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[20px] font-bold text-left text-black/70">
+            내가 모은 알맹이들
+          </p>
+          {/* 스탬프 개수 표시 */}
+          <div className="relative flex items-center flex-shrink-0 h-[38px]">
+            {/* 왼쪽 원형 부분 */}
+            <div className="relative w-[38px] h-[38px] flex-shrink-0 z-10">
+              <svg
+                width="38"
+                height="38"
+                viewBox="0 0 38 38"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-[38px] h-[38px]"
+              >
+                <circle cx="19" cy="19" r="18.5" fill="#EEF9FF" stroke="#747474"></circle>
+                <circle cx="19" cy="19" r="15.5" stroke="#747474"></circle>
+              </svg>
+              {/* 작은 파란색 원의 좌우 중앙에 빨간색과 파란색 아이콘 배치 */}
+              {/* 아이콘 그룹을 작은 원의 중심(19px)에 정렬하기 위한 컨테이너 */}
+              <div className="absolute left-[19px] -translate-x-1/2 z-20" style={{ top: '8px' }}>
+                {/* 빨간 원과 파란 직사각형을 같은 중심선에 정렬 */}
+                <div className="relative flex items-center gap-[2px]">
+                  {/* 빨간 원 */}
+                  <svg
+                    width="9"
+                    height="9"
+                    viewBox="0 0 9 9"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-[9px] h-[9px]"
+                  >
+                    <circle cx="4.5" cy="4.5" r="4.5" fill="#E04F4E"></circle>
+                  </svg>
+                  {/* 파란 직사각형 - 빨간 원과 같은 중심선에 정렬, 25도 회전된 다이아몬드 모양, 크기 15% 감소 */}
+                  <div className="bg-[#6cb6e0] flex-shrink-0" style={{ transform: 'rotate(25deg)', width: '6.67px', height: '6.67px' }}></div>
+                </div>
+              </div>
+              {/* 스탬프 레이블 - 더 위로 올려서 테두리에 가려지지 않도록 */}
+              <p className="absolute left-1/2 -translate-x-1/2 bottom-[8px] text-[7px] text-center lowercase text-black whitespace-nowrap z-10">스탬프</p>
+            </div>
+            {/* 오른쪽 둥근 직사각형 부분 - 원형과 자연스럽게 연결 */}
+            <div className="relative h-[26px] px-3 flex items-center rounded-r-[50px] border border-black/50 border-l-0 bg-white -ml-[2px] self-center">
+              <p className="text-[13px] text-black/50 whitespace-nowrap">6개</p>
+            </div>
+          </div>
+        </div>
         <p className="text-xs text-black/50 mb-4">구매 내역 확인</p>
 
         {/* 구매 내역 리스트 */}

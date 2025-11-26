@@ -79,7 +79,7 @@ export default function EnvironmentSection({ stats, purchaseItems, selectedYear 
         </div>
 
         {/* 구분선 */}
-        <div className="w-full h-[1px] bg-[#959595]/50 my-6" />
+        <div className="w-full h-[1px] bg-[#959595]/50 mt-6 mb-3" />
       </div>
     </div>
   );
