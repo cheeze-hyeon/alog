@@ -3,7 +3,6 @@
 import type { Product } from "@/types/product";
 import { REFILL_CATEGORY, CATEGORY_LABELS, type ProductCategory } from "@/types/product";
 import { useState, useEffect } from "react";
-import { getBaseUrl } from "@/lib/env";
 // 아이콘 컴포넌트 (SVG로 구현)
 const XIcon = ({ size = 20, className }: { size?: number; className?: string }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
@@ -26,13 +25,6 @@ const InfoIcon = ({ size = 32, className }: { size?: number; className?: string 
   </svg>
 );
 
-const ShoppingBagIcon = ({ size = 18 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-    <path d="M3 6h18" />
-    <path d="M16 10a4 4 0 0 1-8 0" />
-  </svg>
-);
 
 type Props = {
   open: boolean;
@@ -123,7 +115,7 @@ export default function ProductDetailModal({ open, onClose, productId }: Props) 
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`${getBaseUrl()}/api/products/${productId}`, {
+        const res = await fetch(`/api/products/${productId}`, {
           cache: "no-store",
         });
         if (!res.ok) throw new Error("상품 정보를 불러올 수 없습니다.");

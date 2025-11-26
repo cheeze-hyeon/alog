@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ProductDetailModal from "@/components/ProductDetailModal";
+import { useRouter } from "next/navigation";
 
 type ReceiptItem = {
   id: number;
@@ -34,6 +35,7 @@ export default function ReceiptContent({
   itemsByCategory,
   totalAmount,
 }: Props) {
+  const router = useRouter();
   const [selectedProductId, setSelectedProductId] = useState<number | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -137,7 +139,9 @@ export default function ReceiptContent({
         {/* Floating 버튼 */}
         <div className="fixed bottom-0 left-0 right-0 z-50 pb-4 px-6">
           <div className="max-w-[393px] mx-auto">
-            <button className="w-full bg-[#e04f4e] rounded-2xl py-4 text-center text-white text-[15px] font-semibold ">
+            <button className="w-full bg-[#e04f4e] rounded-2xl py-4 text-center text-white text-[15px] font-semibold "
+            onClick={() => router.push(`/mypage?phone=01012345678`)}
+            >
               나의 알맹 히스토리 더 보기
             </button>
           </div>
