@@ -1,18 +1,20 @@
 "use client";
 import { useEffect, useState, useRef } from "react";
 
-export type Unit = "g";
+export type Unit = "g" | "ea";
 
 export default function QuantityModal({
   open,
   onClose,
   onConfirm,
   unitPrice,
+  pricingUnit = "g",
 }: {
   open: boolean;
   onClose: () => void;
   onConfirm: (v: { volume: number; unit: Unit }) => void;
   unitPrice: number;
+  pricingUnit?: "g" | "ea";
 }) {
   const [vol, setVol] = useState<number>(0);
   const [displayValue, setDisplayValue] = useState<string>("0");
@@ -39,12 +41,12 @@ export default function QuantityModal({
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         onClose();
-      } else if (e.key === "Enter") {
-        if (vol > 0) {
-          onConfirm({ volume: vol, unit: "g" });
-          onClose();
-        }
-      }
+              } else if (e.key === "Enter") {
+                if (vol > 0) {
+                  onConfirm({ volume: vol, unit: pricingUnit });
+                  onClose();
+                }
+              }
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -68,10 +70,10 @@ export default function QuantityModal({
         </div>
 
         <div className="p-6 space-y-6">
-          {/* 용량 입력 */}
+          {/* 수량 입력 */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              용량 (g)
+              {pricingUnit === "ea" ? "개수" : "용량"} ({pricingUnit === "ea" ? "개" : "g"})
             </label>
             <input
               ref={inputRef}
@@ -111,7 +113,7 @@ export default function QuantityModal({
                 if (e.key === "Enter") {
                   e.preventDefault();
                   if (vol > 0) {
-                    onConfirm({ volume: vol, unit: "g" });
+                    onConfirm({ volume: vol, unit: pricingUnit });
                     onClose();
                   }
                 } else if (e.key === "ArrowUp" || e.key === "ArrowDown") {
@@ -119,7 +121,7 @@ export default function QuantityModal({
                 }
               }}
               className="w-full px-4 py-3 text-lg border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-rose-500 focus:border-transparent text-right"
-              placeholder="용량을 입력하세요"
+              placeholder={pricingUnit === "ea" ? "개수를 입력하세요" : "용량을 입력하세요"}
             />
             <p className="text-xs text-slate-500 mt-1.5">
               숫자를 직접 입력해주세요
@@ -135,7 +137,7 @@ export default function QuantityModal({
               </span>
             </div>
             <div className="mt-2 text-xs text-slate-500">
-              {unitPrice.toLocaleString()}원/g × {vol.toLocaleString()}g
+              {unitPrice.toLocaleString()}원/{pricingUnit === "ea" ? "개" : "g"} × {vol.toLocaleString()}{pricingUnit === "ea" ? "개" : "g"}
             </div>
           </div>
         </div>
@@ -149,7 +151,7 @@ export default function QuantityModal({
           </button>
           <button
             onClick={() => {
-              onConfirm({ volume: vol, unit: "g" });
+              onConfirm({ volume: vol, unit: pricingUnit });
               onClose();
             }}
             disabled={vol <= 0}

@@ -188,9 +188,9 @@ export default function BadgesSection({ purchaseItems, selectedYear }: BadgesSec
                             </div>
                           </div>
 
-                          {/* 용량 x 단가 */}
+                          {/* 수량 x 단가 */}
                           <p className="text-xs text-black/50">
-                            {item.quantity.toLocaleString()}g x {item.unitPrice.toLocaleString()}원/g
+                            {item.quantity.toLocaleString()}{item.pricingUnit === "ea" ? "개" : "g"} x {item.unitPrice.toLocaleString()}원/{item.pricingUnit === "ea" ? "개" : "g"}
                           </p>
                         </div>
 

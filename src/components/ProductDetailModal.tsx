@@ -222,9 +222,10 @@ export default function ProductDetailModal({ open, onClose, productId }: Props) 
                   </h2>
                   <div className="flex items-baseline gap-2">
                     <span className="text-lg font-bold text-[#e04f4e]">
-                      {product.current_price ? formatCurrency(product.current_price) : "가격 미정"}/g
+                      {product.current_price 
+                        ? `${formatCurrency(product.current_price)}/${product.pricing_unit === "ea" ? "개" : "g"}` 
+                        : "가격 미정"}
                     </span>
-                    {/* 리필 상품일 경우 단위 표시 추가 추천 (예: /1g) */}
                   </div>
                 </div>
 

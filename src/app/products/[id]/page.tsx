@@ -35,7 +35,7 @@ export default async function ProductDetailPage({ params }: { params: Promise<{ 
         )}
         {product.current_price && (
           <p className="text-lg font-semibold text-rose-600 mt-2">
-            {product.current_price.toLocaleString()}원
+            {product.current_price.toLocaleString()}원/{product.pricing_unit === "ea" ? "개" : "g"}
           </p>
         )}
       </header>

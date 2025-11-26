@@ -63,4 +63,5 @@ export type Product = {
   category: string | null;
   current_price: number | null;
   current_carbon_emission: number | null;
+  pricing_unit: "g" | "ea" | null;
 };

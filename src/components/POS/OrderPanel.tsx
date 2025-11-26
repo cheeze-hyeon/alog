@@ -25,8 +25,14 @@ export default function OrderPanel({
   onOpenCustomerModal?: () => void;
   formatPhone: (phone: string) => string;
 }) {
-  const formatUnitPrice = (price: number) => {
-    return `${Math.round(price)}원/g`;
+  const formatUnitPrice = (price: number, unit: "g" | "ea" = "g") => {
+    const unitLabel = unit === "ea" ? "개" : "g";
+    return `${Math.round(price)}원/${unitLabel}`;
+  };
+
+  const formatQuantity = (quantity: number, unit: "g" | "ea" = "g") => {
+    const unitLabel = unit === "ea" ? "개" : "g";
+    return `${quantity}${unitLabel}`;
   };
 
   return (
@@ -58,17 +64,17 @@ export default function OrderPanel({
                 {/* 제품명 */}
                 <p className="text-base md:text-[17px] font-medium text-black pr-8">{row.name}</p>
 
-                {/* 단가(왼쪽) + 무게+가격(오른쪽) */}
+                {/* 단가(왼쪽) + 수량+가격(오른쪽) */}
                 <div className="flex justify-between items-center w-full">
                   {/* 단가 */}
                   <span className="text-sm md:text-[15px] font-medium text-[#e04f4e]">
-                    {formatUnitPrice(row.unitPricePerG)}
+                    {formatUnitPrice(row.unitPricePerG, row.pricingUnit)}
                   </span>
 
-                  {/* 무게 + 가격 */}
+                  {/* 수량 + 가격 */}
                   <div className="flex items-center gap-2">
                     <span className="text-sm md:text-[15px] font-medium text-[#959595]">
-                      {row.volumeG}g
+                      {formatQuantity(row.volumeG, row.pricingUnit)}
                     </span>
                     <span className="text-base md:text-[17px] font-medium text-black">
                       {Math.round(row.amount).toLocaleString()}원
