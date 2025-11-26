@@ -128,7 +128,7 @@ export default function CatalogPanel({
 
                 {/* 제품명 */}
                 <p 
-                  className="text-sm md:text-base font-medium text-black mb-2 text-center line-clamp-2 h-[2.5rem] md:h-[3rem] flex items-center justify-center"
+                  className="text-xs md:text-sm font-medium text-black mb-2 text-center line-clamp-3 min-h-[2.5rem] md:min-h-[3rem] flex items-center justify-center"
                   style={{ wordBreak: 'keep-all' }}
                 >
                   {p.name || "상품명 없음"}
