@@ -6,7 +6,7 @@ export default function PrivacyPage() {
 
         <div className="prose prose-slate max-w-none space-y-8 text-black/80">
           <p className="text-base leading-relaxed">
-            <strong>알록</strong>(이하 '회사')은(는) 이용자의 개인정보를 중요시하며, "개인정보 보호법"을 준수하고 있습니다.
+            <strong>주식회사 알리</strong>(이하 '회사')은(는) 이용자의 개인정보를 중요시하며, "개인정보 보호법"을 준수하고 있습니다.
           </p>
 
           <section className="space-y-4">
