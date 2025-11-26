@@ -50,6 +50,50 @@ function formatTextWithLineBreaks(text: string | null): string {
   return text.replace(/\\n/g, "\n");
 }
 
+// 카테고리에 따라 이미지 경로 반환
+function getCategoryImage(category: ProductCategory | null): string {
+  if (!category) return "/product/stationery.png";
+
+  // 1. 욕실 및 퍼스널 케어
+  const bathroomCategories: ProductCategory[] = [
+    "shampoo",
+    "conditioner",
+    "body_handwash",
+    "cleansing",
+    "lotion_oil",
+    "cream_balm_gel_pack",
+    "bathroom",
+  ];
+  if (bathroomCategories.includes(category)) {
+    return "/product/bathroom.png";
+  }
+
+  // 2. 주방 및 식품
+  const kitchenCategories: ProductCategory[] = [
+    "snack_drink_base",
+    "tea",
+    "cooking_ingredient",
+    "kitchen",
+  ];
+  if (kitchenCategories.includes(category)) {
+    return "/product/kitchen.png";
+  }
+
+  // 3. 세탁 및 청소
+  const cleaningCategories: ProductCategory[] = ["detergent", "cleaning"];
+  if (cleaningCategories.includes(category)) {
+    return "/product/cleaning.png";
+  }
+
+  // 4. 문구 및 기타
+  if (category === "stationery") {
+    return "/product/stationery.png";
+  }
+
+  // 기본값
+  return "/product/stationery.png";
+}
+
 // 스켈레톤 UI 컴포넌트 (로딩 경험 개선)
 const ProductSkeleton = () => (
   <div className="animate-pulse space-y-4">
@@ -156,10 +200,13 @@ export default function ProductDetailModal({ open, onClose, productId }: Props) 
             </div>
           ) : product ? (
             <>
-              {/* 1. 상품 이미지 영역 (플레이스홀더) */}
-              <div className="relative w-full h-56 bg-gray-100 flex items-center justify-center overflow-hidden">
-                {/* 실제 이미지가 있다면 <img src={product.imageUrl} ... /> */}
-                <span className="text-gray-400 text-sm">이미지 준비중</span>
+              {/* 1. 상품 이미지 영역 */}
+              <div className="relative w-full h-56 bg-gray-100 overflow-hidden">
+                <img
+                  src={getCategoryImage(categoryKey)}
+                  alt={product.name || "상품 이미지"}
+                  className="w-full h-full object-cover"
+                />
                 {isRefill && (
                   <div className="absolute bottom-3 left-4 bg-green-100 text-green-700 px-2 py-1 rounded-md text-xs font-bold flex items-center gap-1">
                     <LeafIcon size={12} /> 리필 가능
