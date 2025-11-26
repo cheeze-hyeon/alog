@@ -258,14 +258,16 @@ export default function ProductDetailModal({ open, onClose, productId }: Props) 
 
                 {/* 4. 상세 정보 (아코디언 없이 깔끔한 나열) */}
                 <div className="space-y-4 pt-2">
-                  {product.short_description && (
-                    <div>
-                      <h4 className="text-sm font-semibold text-gray-900 mb-1">상품 소개</h4>
+                  <div>
+                    <h4 className="text-sm font-semibold text-gray-900 mb-1">상품 소개</h4>
+                    {product.short_description ? (
                       <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-line">
                         {formatTextWithLineBreaks(product.short_description)}
                       </p>
-                    </div>
-                  )}
+                    ) : (
+                      <p className="text-sm text-gray-500">상품 상세 정보 준비중이에요!</p>
+                    )}
+                  </div>
 
                   {product.ingredients && (
                     <div className="pt-4 border-t border-gray-100">
