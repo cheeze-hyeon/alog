@@ -11,6 +11,7 @@ export interface EnvironmentStats {
 
 export interface PurchaseItem {
   id: number;
+  receiptId: number; // 영수증 ID
   date: string; // YYMMDD 형식
   visitDate: string; // YYYY.MM.DD 형식 (표시용)
   productName: string;

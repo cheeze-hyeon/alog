@@ -1,5 +1,6 @@
 import type { PurchaseItem } from "@/types";
 import { useMemo, useState, useEffect } from "react";
+import Link from "next/link";
 
 interface BadgesSectionProps {
   purchaseItems: PurchaseItem[];
@@ -77,10 +78,32 @@ export default function BadgesSection({ purchaseItems, selectedYear }: BadgesSec
                 )}
                 
                 {/* 날짜 표시 (각 그룹의 첫 번째 항목 위에 표시) */}
-                <div className={`mb-3 ${groupIndex === 0 ? "mt-0" : "mt-0"}`}>
+                <div className={`mb-3 ${groupIndex === 0 ? "mt-0" : "mt-0"} flex items-center justify-between`}>
                   <p className="text-[18px] font-bold" style={{ color: "#4D4D4D" }}>
                     {date}
                   </p>
+                  <Link
+                    href={`/receipt/${items[0].receiptId}`}
+                    className="flex items-center justify-center hover:opacity-70 transition-opacity"
+                    aria-label="영수증 보기"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-4 h-4"
+                    >
+                      <path
+                        d="M6 12L10 8L6 4"
+                        stroke="#4D4D4D"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </Link>
                 </div>
                 {/* 날짜별 그룹 */}
                 {items.map((item) => (
@@ -133,20 +156,6 @@ export default function BadgesSection({ purchaseItems, selectedYear }: BadgesSec
                           </p>
                         </div>
                       </div>
-
-                      {/* 하단: 플라스틱 감축 메시지 (리필 상품인 경우) */}
-                      {item.isRefill && (
-                        <div className="flex items-start gap-1">
-                          <span className="text-xs mt-0.5">💡</span>
-                          <p className="text-xs leading-relaxed" style={{ color: "#E04F4E" }}>
-                            알맹상점은 지금 해당 상품으로{" "}
-                            <span className="font-bold">
-                              플라스틱을 {item.plasticReductionG.toLocaleString()}g
-                            </span>{" "}
-                            줄이고 있어요!
-                          </p>
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))}

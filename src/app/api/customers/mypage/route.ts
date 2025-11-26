@@ -232,6 +232,7 @@ export async function GET(request: NextRequest) {
 
           purchaseItems.push({
             id: item.id,
+            receiptId: receipt.id,
             date: dateStr,
             visitDate: visitDateStr,
             productName: product?.name || "상품명 없음",
