@@ -23,7 +23,7 @@ export default function PrivacyPage() {
             <h2 className="text-2xl font-bold text-black mt-10 mb-4">2. 수집하는 개인정보의 항목</h2>
             <p className="text-base leading-relaxed">회사는 카카오 간편 로그인을 통해 아래와 같은 개인정보를 수집합니다.</p>
             <ul className="list-disc pl-6 space-y-2 text-base leading-relaxed">
-              <li><strong>필수 항목:</strong> <strong>휴대전화번호</strong>, <strong>성별</strong>, <strong>출생 연도</strong>, 카카오 계정(이메일), 닉네임, 프로필 사진</li>
+              <li><strong>필수 항목:</strong> <strong>휴대전화번호</strong>, <strong>성별</strong>, <strong>출생 연도</strong></li>
               <li><strong>선택 항목:</strong> 이름, 생일</li>
             </ul>
           </section>
