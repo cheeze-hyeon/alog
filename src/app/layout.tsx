@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import Footer from "@/components/Footer";
+import FooterWrapper from "@/components/FooterWrapper";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "알맹상점 | 스마트 영수증",
-  description: "알맹 스마트 영수증 프로젝트 초기 환경",
+  title: "알록 | 알맹상점 기록",
+  description: "알맹상점 스마트 영수증",
   icons: {
     icon: "/icon.png",
   },
@@ -30,9 +30,7 @@ export default function RootLayout({
     <html lang="ko">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         {children}
-        <div className="mt-16">
-          <Footer />
-        </div>
+          <FooterWrapper />
       </body>
     </html>
   );
