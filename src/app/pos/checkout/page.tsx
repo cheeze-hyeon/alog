@@ -22,7 +22,9 @@ function CheckoutContent() {
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [customerPhone, setCustomerPhone] = useState<string | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
-  const [activeCat, setActiveCat] = useState<ProductCategory | "all">("all");
+  const [activeCat, setActiveCat] = useState<
+    ProductCategory | "all" | "shampoo_conditioner_cleansing"
+  >("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   // 장바구니
@@ -436,7 +438,11 @@ function CheckoutContent() {
               {/* 빨간색 세로 바 */}
               <div className="w-1 h-6 md:h-8 bg-[#E75251] rounded-full flex-shrink-0"></div>
               <h2 className="text-2xl md:text-3xl font-semibold text-black">
-                {activeCat === "all" ? "전체" : CATEGORY_LABELS[activeCat as ProductCategory]}
+                {activeCat === "all"
+                  ? "전체"
+                  : activeCat === "shampoo_conditioner_cleansing"
+                    ? "샴푸/컨디셔너/클렌징"
+                    : CATEGORY_LABELS[activeCat as ProductCategory]}
               </h2>
             </div>
             {/* 상품 그리드 - 스크롤 가능 */}
@@ -453,8 +459,8 @@ function CheckoutContent() {
         </div>
       </div>
 
-      {/* 우측 주문 패널 - 오른쪽 전체 높이 (헤더부터) */}
-      <div className="w-full lg:w-[460px] xl:w-[518px] flex-shrink-0 flex flex-col min-h-0 h-full">
+      {/* 우측 주문 패널 - 화면의 1/4 너비만 차지 */}
+      <div className="w-1/4 flex-shrink-0 flex flex-col min-h-0 h-full">
         <OrderPanel
           customer={customer}
           customerPhone={customerPhone}
