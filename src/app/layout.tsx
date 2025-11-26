@@ -16,6 +16,9 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "알맹상점 | 스마트 영수증",
   description: "알맹 스마트 영수증 프로젝트 초기 환경",
+  icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default function RootLayout({
