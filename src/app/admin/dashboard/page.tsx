@@ -2,6 +2,9 @@ import Card from '@/components/ui/Card'
 import DashboardClient from './DashboardClient'
 import { getBaseUrl } from '@/lib/env'
 
+// 동적 렌더링 강제 (실시간 데이터를 위해)
+export const dynamic = 'force-dynamic'
+
 type Stats = {
   totalCustomers: number
   totalProducts: number

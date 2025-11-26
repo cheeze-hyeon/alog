@@ -1,7 +1,7 @@
 'use client'
 
 import Card from '@/components/ui/Card'
-import { Heart, ShoppingBag, Droplet, Briefcase, Leaf } from 'lucide-react'
+import { Heart, ShoppingBag, Droplet, Briefcase } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
 
 type Stats = {
@@ -85,19 +85,12 @@ export default function DashboardClient({
       color: 'text-blue-500',
       bgColor: 'bg-blue-50',
     },
-    {
-      title: 'CO₂ 감축량',
-      value: `${stats.co2SavedKg.toFixed(2)}kg`,
-      icon: Leaf,
-      color: 'text-green-500',
-      bgColor: 'bg-green-50',
-    },
   ]
 
   return (
     <div className="space-y-6 bg-white">
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {statsData.map((stat) => {
           const Icon = stat.icon
           return (
