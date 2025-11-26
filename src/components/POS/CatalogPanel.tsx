@@ -4,12 +4,12 @@ import { useMemo } from "react";
 import type { Product, ProductCategory } from "@/types";
 import { CATEGORY_LABELS } from "@/types";
 
-type ExtendedCategory = ProductCategory | "all";
+type ExtendedCategory = ProductCategory | "all" | "shampoo_conditioner_cleansing";
 
 interface CatalogPanelProps {
   products: Product[];
-  activeCat: ProductCategory | "all";
-  onChangeCat: (cat: ProductCategory | "all") => void;
+  activeCat: ProductCategory | "all" | "shampoo_conditioner_cleansing";
+  onChangeCat: (cat: ProductCategory | "all" | "shampoo_conditioner_cleansing") => void;
   onPick: (product: Product) => void;
   searchQuery?: string;
 }
@@ -36,7 +36,16 @@ export default function CatalogPanel({
 
     // 1. 먼저 카테고리 필터링 (전체가 아니면)
     if (currentActiveCat !== "all") {
-      result = result.filter((p) => p.category === currentActiveCat);
+      // 통합 카테고리인 경우 세 카테고리 모두 포함
+      if (currentActiveCat === "shampoo_conditioner_cleansing") {
+        result = result.filter((p) => 
+          p.category === "shampoo" || 
+          p.category === "conditioner" || 
+          p.category === "cleansing"
+        );
+      } else {
+        result = result.filter((p) => p.category === currentActiveCat);
+      }
     }
 
     // 2. 그 다음 검색어로 필터링 (검색어가 있으면)
@@ -71,6 +80,13 @@ export default function CatalogPanel({
     return result;
   }, [normalized, searchQuery, currentActiveCat]);
 
+  // 카테고리 라벨 가져오기
+  const getCategoryLabel = () => {
+    if (currentActiveCat === "all") return "전체";
+    if (currentActiveCat === "shampoo_conditioner_cleansing") return "샴푸/컨디셔너/클렌징";
+    return CATEGORY_LABELS[currentActiveCat as ProductCategory];
+  };
+
   const formatUnitPrice = (price: number) => {
     return `${Math.round(price)}원/g`;
   };
@@ -88,7 +104,7 @@ export default function CatalogPanel({
                 {" "}
                 (
                 <span className="font-medium">
-                  {CATEGORY_LABELS[currentActiveCat as ProductCategory]}
+                  {getCategoryLabel()}
                 </span>
                 ) 검색 결과
               </>
@@ -104,11 +120,11 @@ export default function CatalogPanel({
         <p className="text-slate-400 text-sm mt-6">
           {searchQuery.trim()
             ? currentActiveCat !== "all"
-              ? `"${searchQuery}"에 대한 ${CATEGORY_LABELS[currentActiveCat as ProductCategory]} 검색 결과가 없습니다.`
+              ? `"${searchQuery}"에 대한 ${getCategoryLabel()} 검색 결과가 없습니다.`
               : `"${searchQuery}"에 대한 검색 결과가 없습니다.`
             : currentActiveCat === "all"
               ? "등록된 상품이 없습니다."
-              : `${CATEGORY_LABELS[currentActiveCat as ProductCategory]} 카테고리에 등록된 상품이 없습니다.`}
+              : `${getCategoryLabel()} 카테고리에 등록된 상품이 없습니다.`}
         </p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-7">

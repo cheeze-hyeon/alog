@@ -2,7 +2,7 @@
 export const PRODUCT_CATEGORIES = [
   /**
    * refill products
-  */
+   */
   "snack_drink_base",
   "detergent",
   "lotion_oil",
@@ -20,6 +20,7 @@ export const PRODUCT_CATEGORIES = [
   "bathroom",
   "cleaning",
   "kitchen",
+  "others",
 ] as const;
 
 export type ProductCategory = (typeof PRODUCT_CATEGORIES)[number];
@@ -42,7 +43,8 @@ export const GENERAL_CATEGORY: Partial<Record<ProductCategory, string>> = {
   stationery: "문구류",
   bathroom: "욕실용품",
   cleaning: "청소용품",
-  kitchen: "주방용품"
+  kitchen: "주방용품",
+  others: "기타",
 };
 
 // 모든 카테고리 라벨 통합
