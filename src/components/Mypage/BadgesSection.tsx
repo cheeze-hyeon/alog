@@ -1,5 +1,6 @@
 import type { PurchaseItem } from "@/types";
 import { useMemo, useState, useEffect } from "react";
+import Link from "next/link";
 
 interface BadgesSectionProps {
   purchaseItems: PurchaseItem[];
@@ -56,11 +57,56 @@ export default function BadgesSection({ purchaseItems, selectedYear }: BadgesSec
   };
 
   return (
-    <div className="w-full bg-white px-4 pt-2 pb-6">
+    <div className="w-full bg-white px-4 pt-1 pb-6">
       <div className="max-w-md mx-auto">
-        <p className="text-[20px] font-bold text-left text-black/70 mb-2">
-          내가 모은 알맹이들
-        </p>
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[20px] font-bold text-left text-black/70">
+            내가 모은 알맹이들
+          </p>
+          {/* 스탬프 개수 표시 */}
+          <div className="relative flex items-center flex-shrink-0 h-[38px]">
+            {/* 왼쪽 원형 부분 */}
+            <div className="relative w-[38px] h-[38px] flex-shrink-0 z-10">
+              <svg
+                width="38"
+                height="38"
+                viewBox="0 0 38 38"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+                className="w-[38px] h-[38px]"
+              >
+                <circle cx="19" cy="19" r="18.5" fill="#EEF9FF" stroke="#747474"></circle>
+                <circle cx="19" cy="19" r="15.5" stroke="#747474"></circle>
+              </svg>
+              {/* 작은 파란색 원의 좌우 중앙에 빨간색과 파란색 아이콘 배치 */}
+              {/* 아이콘 그룹을 작은 원의 중심(19px)에 정렬하기 위한 컨테이너 */}
+              <div className="absolute left-[19px] -translate-x-1/2 z-20" style={{ top: '8px' }}>
+                {/* 빨간 원과 파란 직사각형을 같은 중심선에 정렬 */}
+                <div className="relative flex items-center gap-[2px]">
+                  {/* 빨간 원 */}
+                  <svg
+                    width="9"
+                    height="9"
+                    viewBox="0 0 9 9"
+                    fill="none"
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="w-[9px] h-[9px]"
+                  >
+                    <circle cx="4.5" cy="4.5" r="4.5" fill="#E04F4E"></circle>
+                  </svg>
+                  {/* 파란 직사각형 - 빨간 원과 같은 중심선에 정렬, 25도 회전된 다이아몬드 모양, 크기 15% 감소 */}
+                  <div className="bg-[#6cb6e0] flex-shrink-0" style={{ transform: 'rotate(25deg)', width: '6.67px', height: '6.67px' }}></div>
+                </div>
+              </div>
+              {/* 스탬프 레이블 - 더 위로 올려서 테두리에 가려지지 않도록 */}
+              <p className="absolute left-1/2 -translate-x-1/2 bottom-[8px] text-[7px] text-center lowercase text-black whitespace-nowrap z-10">스탬프</p>
+            </div>
+            {/* 오른쪽 둥근 직사각형 부분 - 원형과 자연스럽게 연결 */}
+            <div className="relative h-[26px] px-3 flex items-center rounded-r-[50px] border border-black/50 border-l-0 bg-white -ml-[2px] self-center">
+              <p className="text-[13px] text-black/50 whitespace-nowrap">6개</p>
+            </div>
+          </div>
+        </div>
         <p className="text-xs text-black/50 mb-4">구매 내역 확인</p>
 
         {/* 구매 내역 리스트 */}
@@ -77,10 +123,32 @@ export default function BadgesSection({ purchaseItems, selectedYear }: BadgesSec
                 )}
                 
                 {/* 날짜 표시 (각 그룹의 첫 번째 항목 위에 표시) */}
-                <div className={`mb-3 ${groupIndex === 0 ? "mt-0" : "mt-0"}`}>
+                <div className={`mb-3 ${groupIndex === 0 ? "mt-0" : "mt-0"} flex items-center justify-between`}>
                   <p className="text-[18px] font-bold" style={{ color: "#4D4D4D" }}>
                     {date}
                   </p>
+                  <Link
+                    href={`/receipt/${items[0].receiptId}`}
+                    className="flex items-center justify-center hover:opacity-70 transition-opacity"
+                    aria-label="영수증 보기"
+                  >
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 16 16"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="w-4 h-4"
+                    >
+                      <path
+                        d="M6 12L10 8L6 4"
+                        stroke="#4D4D4D"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                  </Link>
                 </div>
                 {/* 날짜별 그룹 */}
                 {items.map((item) => (
@@ -120,9 +188,9 @@ export default function BadgesSection({ purchaseItems, selectedYear }: BadgesSec
                             </div>
                           </div>
 
-                          {/* 용량 x 단가 */}
+                          {/* 수량 x 단가 */}
                           <p className="text-xs text-black/50">
-                            {item.quantity.toLocaleString()}g x {item.unitPrice.toLocaleString()}원/g
+                            {item.quantity.toLocaleString()}{item.pricingUnit === "ea" ? "개" : "g"} x {item.unitPrice.toLocaleString()}원/{item.pricingUnit === "ea" ? "개" : "g"}
                           </p>
                         </div>
 
@@ -133,20 +201,6 @@ export default function BadgesSection({ purchaseItems, selectedYear }: BadgesSec
                           </p>
                         </div>
                       </div>
-
-                      {/* 하단: 플라스틱 감축 메시지 (리필 상품인 경우) */}
-                      {item.isRefill && (
-                        <div className="flex items-start gap-1">
-                          <span className="text-xs mt-0.5">💡</span>
-                          <p className="text-xs leading-relaxed" style={{ color: "#E04F4E" }}>
-                            알맹상점은 지금 해당 상품으로{" "}
-                            <span className="font-bold">
-                              플라스틱을 {item.plasticReductionG.toLocaleString()}g
-                            </span>{" "}
-                            줄이고 있어요!
-                          </p>
-                        </div>
-                      )}
                     </div>
                   </div>
                 ))}

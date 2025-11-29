@@ -89,9 +89,10 @@ function CheckoutContent() {
   // 🔸 장바구니 추가
   const addToCart = ({ volume, unit }: { volume: number; unit: Unit }) => {
     if (!modalTarget) return;
-    const volG = volume; // g 단위
-    // current_price는 g당 단가
+    const volG = volume; // 수량 (g 또는 개)
+    // current_price는 단가 (g당 또는 개당)
     const unitPricePerG = modalTarget.current_price || 0;
+    const pricingUnit = modalTarget.pricing_unit || "g";
     const amount = volG * unitPricePerG;
     const row: CartRow = {
       id: `${modalTarget.id}_${Date.now()}`,
@@ -100,6 +101,7 @@ function CheckoutContent() {
       volumeG: volG,
       unitPricePerG,
       amount,
+      pricingUnit: pricingUnit === "ea" ? "ea" : "g",
     };
     setCart((prev) => [...prev, row]);
   };
@@ -506,7 +508,7 @@ function CheckoutContent() {
         />
       </div>
 
-      {/* 용량 입력 모달 */}
+      {/* 수량 입력 모달 */}
       <QuantityModal
         open={modalOpen}
         onClose={() => {
@@ -515,6 +517,7 @@ function CheckoutContent() {
         }}
         onConfirm={addToCart}
         unitPrice={modalTarget?.current_price || 0}
+        pricingUnit={modalTarget?.pricing_unit || "g"}
       />
 
       {/* 고객 전화번호 입력 모달 */}

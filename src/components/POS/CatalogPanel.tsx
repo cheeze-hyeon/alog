@@ -86,8 +86,9 @@ export default function CatalogPanel({
     return CATEGORY_LABELS[currentActiveCat as ProductCategory];
   };
 
-  const formatUnitPrice = (price: number) => {
-    return `${Math.round(price)}원/g`;
+  const formatUnitPrice = (price: number, unit: "g" | "ea" | null = "g") => {
+    const unitLabel = unit === "ea" ? "개" : "g";
+    return `${Math.round(price)}원/${unitLabel}`;
   };
 
   return (
@@ -123,8 +124,9 @@ export default function CatalogPanel({
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6 lg:gap-7">
           {filtered.map((p) => {
-            // current_price는 g당 단가
+            // current_price는 단가 (g당 또는 개당)
             const unitPricePerG = p.current_price || 0;
+            const pricingUnit = p.pricing_unit || "g";
             return (
               <button
                 key={p.id}
@@ -146,7 +148,7 @@ export default function CatalogPanel({
 
                 {/* 단가 */}
                 <p className="text-sm text-[#E04F4E] text-center mt-auto">
-                  {formatUnitPrice(unitPricePerG)}
+                  {formatUnitPrice(unitPricePerG, pricingUnit)}
                 </p>
               </button>
             );

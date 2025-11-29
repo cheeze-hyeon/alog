@@ -11,13 +11,15 @@ export interface EnvironmentStats {
 
 export interface PurchaseItem {
   id: number;
+  receiptId: number; // 영수증 ID
   date: string; // YYMMDD 형식
   visitDate: string; // YYYY.MM.DD 형식 (표시용)
   productName: string;
   productCategory: ProductCategory | null;
   price: number;
-  quantity: number; // 구매량 (g)
-  unitPrice: number; // 단가 (원/g)
+  quantity: number; // 구매량 (g 또는 개)
+  unitPrice: number; // 단가 (원/g 또는 원/개)
+  pricingUnit: "g" | "ea"; // 가격 단위
   isRefill: boolean; // 리필 여부 (product.is_refill)
   type: "refill" | "product"; // 리필 또는 일반 상품
   plasticReductionG: number; // 해당 상품의 플라스틱 감축량 (g)

@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
         if (productIds.length > 0) {
           const { data: productData } = await supabaseServerClient
             .from("product")
-            .select("id, name, category, is_refill")
+            .select("id, name, category, is_refill, pricing_unit")
             .in("id", productIds);
 
           products = (productData || []) as any[];
@@ -210,8 +210,8 @@ export async function GET(request: NextRequest) {
 
           console.log(`📅 Date parsed: ${receipt.visit_date} -> ${visitDateStr}`);
 
-          const quantity = item["purchase_quantity"] || 0; // g 단위
-          const unitPrice = item["purchase_unit_price"] || 0; // 원/g
+          const quantity = item["purchase_quantity"] || 0; // 수량 (g 또는 개)
+          const unitPrice = item["purchase_unit_price"] || 0; // 단가 (원/g 또는 원/개)
           const price = Math.round(quantity * unitPrice);
 
           console.log(`📋 Purchase item: ${product?.name || "Unknown"}, price: ${price}, date: ${dateStr}`);
@@ -225,13 +225,18 @@ export async function GET(request: NextRequest) {
                category !== "cooking_ingredient" && 
                category !== "tea");
 
+          // pricing_unit 가져오기 (기본값은 "g")
+          const pricingUnit = product?.pricing_unit || "g";
+
           // 플라스틱 감축량 계산 (리필 상품의 경우)
           // 이미지 기준: 200g 샴푸 = 3100g 감축 (약 15.5g/g), 100g 샴푸 = 590g 감축 (약 5.9g/g)
           // 상품별로 다를 수 있으므로 평균값(약 10g/g) 사용, 추후 상품별 계수로 개선 가능
-          const plasticReductionG = isRefill ? Math.round(quantity * 10) : 0; // 리필 상품만 플라스틱 감축
+          // 개 단위 상품은 플라스틱 감축량이 없음
+          const plasticReductionG = isRefill && pricingUnit === "g" ? Math.round(quantity * 10) : 0; // 리필 상품만 플라스틱 감축
 
           purchaseItems.push({
             id: item.id,
+            receiptId: receipt.id,
             date: dateStr,
             visitDate: visitDateStr,
             productName: product?.name || "상품명 없음",
@@ -239,6 +244,7 @@ export async function GET(request: NextRequest) {
             price,
             quantity,
             unitPrice,
+            pricingUnit: pricingUnit === "ea" ? "ea" : "g",
             isRefill,
             type: isRefill ? "refill" : "product",
             plasticReductionG,

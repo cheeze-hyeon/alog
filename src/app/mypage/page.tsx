@@ -104,7 +104,11 @@ function MyPageContent() {
             />
 
             {/* 환경 영향 섹션 */}
-            <EnvironmentSection stats={data.stats} />
+            <EnvironmentSection 
+              stats={data.stats} 
+              purchaseItems={data.purchaseItems}
+              selectedYear={selectedYear}
+            />
 
             {/* 구매 내역 섹션 */}
             <BadgesSection 
