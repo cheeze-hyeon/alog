@@ -23,22 +23,12 @@ export async function GET() {
       (receipts || []).map(async (receipt) => {
         const { data: items, error: itemsError } = await supabaseServerClient
           .from("receipt_item")
-          .select(
-            `
-            purchase_quantity,
-            purchase_unit_price,
-            product:product_id (
-              id,
-              name,
-              category
-            )
-          `
-          )
+          .select("product_id, purchase_quantity, purchase_unit_price")
           .eq("receipt_id", receipt.id);
 
         if (itemsError) {
           console.error("Supabase error (items):", itemsError);
-          return null;
+          return [];
         }
 
         // 고객의 총 방문 횟수 조회
@@ -54,47 +44,59 @@ export async function GET() {
           }
         }
 
-        // 상품 정보 조합
-        const productNames = items
-          ?.map((item: any) => {
-            const name = item.product?.name || "상품명 없음";
-            const quantity = item.purchase_quantity || 0;
-            const unitPrice = item.purchase_unit_price || 0;
-            return quantity > 0
-              ? `${name} (${unitPrice}원/g 외 ${items.length - 1}건)`
-              : name;
+        // 각 receipt_item을 개별 행으로 반환
+        if (!items || items.length === 0) {
+          return [];
+        }
+
+        // 각 아이템의 product 정보를 조회하여 개별 행으로 변환
+        const salesWithProduct = await Promise.all(
+          items.map(async (item: any) => {
+            let productName = "상품명 없음";
+            let category = "-";
+            let totalAmount = 0;
+
+            // product_id가 있으면 product 정보 조회 (is_refill, current_price 포함)
+            if (item.product_id) {
+              const { data: product, error: productError } = await supabaseServerClient
+                .from("product")
+                .select("id, name, is_refill, current_price")
+                .eq("id", item.product_id)
+                .maybeSingle();
+
+              if (!productError && product) {
+                productName = product.name || "상품명 없음";
+                // is_refill 필드 사용: true면 리필, false면 상품
+                category = product.is_refill === true ? "리필" : "상품";
+                
+                // 가격 계산: current_price * purchase_quantity
+                const quantity = item.purchase_quantity || 0;
+                const currentPrice = product.current_price || 0;
+                totalAmount = currentPrice * quantity;
+              }
+            }
+
+            return {
+              receipt: receipt.id.toString(),
+              product: productName,
+              category: category,
+              visits,
+            };
           })
-          .join(", ") || "상품 정보 없음";
+        );
 
-        const categories = Array.from(
-          new Set(
-            items
-              ?.map((item: any) => {
-                const category = item.product?.category;
-                return category === "refill" ? "리필" : "상품";
-              })
-              .filter(Boolean) || []
-          )
-        ).join(", ");
-
-        const totalAmount = items?.reduce(
-          (sum: number, item: any) =>
-            sum + (item.purchase_quantity || 0) * (item.purchase_unit_price || 0),
-          0
-        ) || 0;
-
-        return {
-          receipt: receipt.id.toString(),
-          product: productNames,
-          price: totalAmount.toLocaleString(),
-          category: categories || "-",
-          visits,
-        };
+        return salesWithProduct;
       })
     );
 
-    // null 제거
-    const validSales = recentSales.filter((sale) => sale !== null).slice(0, 4);
+    // 배열을 평탄화하고 최신순으로 정렬 (visit_date 기준)
+    const validSales = recentSales
+      .flat()
+      .sort((a, b) => {
+        // receipt 번호로 정렬 (최신 영수증이 먼저)
+        return parseInt(b.receipt) - parseInt(a.receipt);
+      })
+      .slice(0, 10); // 최대 10개만 표시
 
     return NextResponse.json(validSales);
   } catch (error) {

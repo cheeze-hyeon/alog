@@ -7,16 +7,10 @@ const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 // 빌드 시에는 환경 변수가 없을 수 있으므로, 런타임에만 체크
 if (typeof window === 'undefined' && process.env.NODE_ENV !== 'test') {
   if (!supabaseUrl || !supabaseAnonKey) {
-    // 빌드 시에는 경고만 출력하고 계속 진행
-    if (process.env.NEXT_PHASE === 'phase-production-build') {
-      console.warn(
-        '⚠️ Supabase 환경 변수가 설정되지 않았습니다. 프로덕션 환경에서는 환경 변수를 설정해주세요.'
-      );
-    } else {
-      throw new Error(
-        "Supabase 초기화 실패: 환경 변수가 설정되지 않았습니다. `.env.local`에서 URL과 키를 확인하세요.",
-      );
-    }
+    // 개발 환경과 빌드 시에는 경고만 출력하고 계속 진행 (더미 클라이언트 사용)
+    console.warn(
+      '⚠️ Supabase 환경 변수가 설정되지 않았습니다. 더미 클라이언트를 사용합니다. `.env.local`에서 URL과 키를 설정해주세요.'
+    );
   }
 }
 

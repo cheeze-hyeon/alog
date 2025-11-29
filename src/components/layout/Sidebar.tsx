@@ -13,7 +13,7 @@ const menuCategories = [
   {
     category: '고객',
     items: [
-      { href: '/admin/dashboard/customers', label: '고객 정보' },
+      { href: '/admin/dashboard/users', label: '고객 정보' },
     ],
   },
   {

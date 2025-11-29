@@ -1,4 +1,3 @@
-import Card from '@/components/ui/Card'
 import DashboardClient from './DashboardClient'
 import { getBaseUrl } from '@/lib/env'
 
@@ -35,7 +34,6 @@ type ProductRanking = {
 type RecentSale = {
   receipt: string
   product: string
-  price: string
   category: string
   visits: number
 }

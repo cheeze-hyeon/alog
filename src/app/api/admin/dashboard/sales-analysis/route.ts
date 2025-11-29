@@ -1,18 +1,34 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { supabaseServerClient } from "@/lib/supabase-client";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    // 최근 7일간의 데이터
-    const today = new Date();
-    const sevenDaysAgo = new Date(today);
-    sevenDaysAgo.setDate(today.getDate() - 7);
+    const { searchParams } = new URL(request.url);
+    const startDateParam = searchParams.get('startDate');
+    const endDateParam = searchParams.get('endDate');
 
-    // 먼저 최근 7일간의 receipt ID 조회
+    let today = new Date();
+    let sevenDaysAgo = new Date(today);
+
+    if (startDateParam && endDateParam) {
+      // 제공된 날짜 사용
+      sevenDaysAgo = new Date(startDateParam);
+      today = new Date(endDateParam);
+      today.setHours(23, 59, 59, 999); // 하루의 끝
+      sevenDaysAgo.setHours(0, 0, 0, 0); // 하루의 시작
+    } else {
+      // 기본값: 최근 7일간의 데이터
+      today.setHours(23, 59, 59, 999);
+      sevenDaysAgo.setDate(today.getDate() - 7);
+      sevenDaysAgo.setHours(0, 0, 0, 0);
+    }
+
+    // 먼저 지정된 기간의 receipt ID 조회
     const { data: recentReceipts, error: receiptsError } = await supabaseServerClient
       .from("receipt")
       .select("id")
-      .gte("visit_date", sevenDaysAgo.toISOString());
+      .gte("visit_date", sevenDaysAgo.toISOString())
+      .lte("visit_date", today.toISOString());
 
     if (receiptsError) {
       console.error("Supabase error (receipts):", receiptsError);
@@ -34,12 +50,10 @@ export async function GET() {
       });
     }
 
-    // receipt_item 조회 (리필 여부는 purchase_quantity로 판단)
-    // 리필: purchase_quantity가 있는 경우 (실제로는 더 정확한 로직 필요)
-    // 상품: 새로 구매한 경우
+    // receipt_item에서 product_id 조회
     const { data: receiptItems, error } = await supabaseServerClient
       .from("receipt_item")
-      .select("purchase_quantity, purchase_unit_price")
+      .select("product_id")
       .in("receipt_id", receiptIds);
 
     if (error) {
@@ -50,22 +64,36 @@ export async function GET() {
       );
     }
 
-    let refillTotal = 0;
-    let productTotal = 0;
+    // product_id별로 그룹화하여 is_refill 값 확인
+    const productIds = [...new Set(receiptItems?.map((item: any) => item.product_id).filter(Boolean) || [])];
+    
+    let refillCount = 0;
+    let productCount = 0;
 
-    receiptItems?.forEach((item: any) => {
-      const amount = (item.purchase_quantity || 0) * (item.purchase_unit_price || 0);
-      // 간단한 로직: purchase_quantity가 0보다 크면 리필로 간주
-      // 실제로는 더 정확한 비즈니스 로직이 필요할 수 있습니다
-      if (item.purchase_quantity > 0) {
-        refillTotal += amount;
-      } else {
-        productTotal += amount;
-      }
-    });
+    // 각 product_id에 대해 is_refill 값 확인
+    await Promise.all(
+      productIds.map(async (productId: number) => {
+        const { data: product, error: productError } = await supabaseServerClient
+          .from("product")
+          .select("is_refill")
+          .eq("id", productId)
+          .maybeSingle();
 
-    const total = refillTotal + productTotal;
-    const refillPercentage = total > 0 ? Math.round((refillTotal / total) * 100) : 0;
+        if (!productError && product) {
+          // 해당 product_id가 receipt_item에 몇 번 나타나는지 카운트
+          const count = receiptItems?.filter((item: any) => item.product_id === productId).length || 0;
+          
+          if (product.is_refill === true) {
+            refillCount += count;
+          } else {
+            productCount += count;
+          }
+        }
+      })
+    );
+
+    const total = refillCount + productCount;
+    const refillPercentage = total > 0 ? Math.round((refillCount / total) * 100) : 0;
     const productPercentage = 100 - refillPercentage;
 
     // 카테고리별 매출

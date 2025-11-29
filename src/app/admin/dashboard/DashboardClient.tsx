@@ -1,8 +1,10 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Card from '@/components/ui/Card'
 import { Heart, ShoppingBag, Droplet, Briefcase } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell } from 'recharts'
+import { getBaseUrl } from '@/lib/env'
 
 type Stats = {
   totalCustomers: number
@@ -34,7 +36,6 @@ type ProductRanking = {
 type RecentSale = {
   receipt: string
   product: string
-  price: string
   category: string
   visits: number
 }
@@ -50,12 +51,130 @@ type DashboardClientProps = {
 
 export default function DashboardClient({
   stats,
-  salesTrend,
-  salesAnalysis,
+  salesTrend: initialSalesTrend,
+  salesAnalysis: initialSalesAnalysis,
   productRanking,
   recentSales,
-  dateRange,
+  dateRange: initialDateRange,
 }: DashboardClientProps) {
+  // 날짜 범위를 YYYY-MM-DD 형식으로 변환하는 함수
+  const convertToDateInputFormat = (dateStr: string): string => {
+    // "2024-11-20" 형식이면 그대로 반환
+    if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      return dateStr
+    }
+    // "2024.11.20" 형식이면 변환
+    if (dateStr.includes('.')) {
+      return dateStr.replace(/\./g, '-').replace(/\s/g, '')
+    }
+    // 기타 형식 처리
+    const date = new Date(dateStr)
+    if (!isNaN(date.getTime())) {
+      const year = date.getFullYear()
+      const month = String(date.getMonth() + 1).padStart(2, '0')
+      const day = String(date.getDate()).padStart(2, '0')
+      return `${year}-${month}-${day}`
+    }
+    return dateStr
+  }
+
+  // 날짜 범위 state
+  const [dateRange, setDateRange] = useState({
+    start: convertToDateInputFormat(initialDateRange.start),
+    end: convertToDateInputFormat(initialDateRange.end),
+  })
+  const [salesTrend, setSalesTrend] = useState(initialSalesTrend)
+  const [salesAnalysis, setSalesAnalysis] = useState(initialSalesAnalysis)
+  const [loading, setLoading] = useState(false)
+  const [analysisLoading, setAnalysisLoading] = useState(false)
+
+  // 날짜 변경 시 매출 추이 데이터 다시 가져오기
+  const fetchSalesTrend = async (start: string, end: string) => {
+    setLoading(true)
+    try {
+      const res = await fetch(
+        `${getBaseUrl()}/api/admin/dashboard/sales-trend?startDate=${start}&endDate=${end}`,
+        { cache: 'no-store' }
+      )
+      if (res.ok) {
+        const data = await res.json()
+        setSalesTrend(data)
+      } else {
+        console.error('Failed to fetch sales trend')
+      }
+    } catch (error) {
+      console.error('Error fetching sales trend:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 날짜 변경 시 판매 분석 데이터 다시 가져오기
+  const fetchSalesAnalysis = async (start: string, end: string) => {
+    setAnalysisLoading(true)
+    try {
+      const res = await fetch(
+        `${getBaseUrl()}/api/admin/dashboard/sales-analysis?startDate=${start}&endDate=${end}`,
+        { cache: 'no-store' }
+      )
+      if (res.ok) {
+        const data = await res.json()
+        setSalesAnalysis(data)
+      } else {
+        console.error('Failed to fetch sales analysis')
+      }
+    } catch (error) {
+      console.error('Error fetching sales analysis:', error)
+    } finally {
+      setAnalysisLoading(false)
+    }
+  }
+
+  // 날짜 변경 핸들러
+  const handleDateChange = (type: 'start' | 'end', value: string) => {
+    const newDateRange = { ...dateRange, [type]: value }
+    setDateRange(newDateRange)
+    
+    // 시작일이 종료일보다 늦으면 종료일을 시작일로 설정
+    if (type === 'start' && new Date(value) > new Date(newDateRange.end)) {
+      newDateRange.end = value
+      setDateRange(newDateRange)
+    }
+    // 종료일이 시작일보다 이르면 시작일을 종료일로 설정
+    if (type === 'end' && new Date(value) < new Date(newDateRange.start)) {
+      newDateRange.start = value
+      setDateRange(newDateRange)
+    }
+    
+    // 매출 추이와 판매 분석 모두 업데이트
+    fetchSalesTrend(newDateRange.start, newDateRange.end)
+    fetchSalesAnalysis(newDateRange.start, newDateRange.end)
+  }
+
+  // 판매 분석 날짜 변경 핸들러 (별도 날짜 범위 사용)
+  const [analysisDateRange, setAnalysisDateRange] = useState({
+    start: convertToDateInputFormat(initialDateRange.start),
+    end: convertToDateInputFormat(initialDateRange.end),
+  })
+
+  const handleAnalysisDateChange = (type: 'start' | 'end', value: string) => {
+    const newDateRange = { ...analysisDateRange, [type]: value }
+    setAnalysisDateRange(newDateRange)
+    
+    // 시작일이 종료일보다 늦으면 종료일을 시작일로 설정
+    if (type === 'start' && new Date(value) > new Date(newDateRange.end)) {
+      newDateRange.end = value
+      setAnalysisDateRange(newDateRange)
+    }
+    // 종료일이 시작일보다 이르면 시작일을 종료일로 설정
+    if (type === 'end' && new Date(value) < new Date(newDateRange.start)) {
+      newDateRange.start = value
+      setAnalysisDateRange(newDateRange)
+    }
+    
+    fetchSalesAnalysis(newDateRange.start, newDateRange.end)
+  }
+
   const statsData = [
     {
       title: '총 고객 수',
@@ -80,7 +199,7 @@ export default function DashboardClient({
     },
     {
       title: '총 매출',
-      value: `${stats.totalRevenue.toLocaleString()}원`,
+      value: stats.totalRevenue.toLocaleString(),
       icon: Briefcase,
       color: 'text-blue-500',
       bgColor: 'bg-blue-50',
@@ -113,71 +232,103 @@ export default function DashboardClient({
         })}
       </div>
 
-      {/* 매출 추이 차트 */}
-      <Card title="매출 추이">
-        <div className="mb-4 flex items-center gap-4">
-          <div className="flex items-center gap-2 px-3 py-1.5 border border-gray-300 rounded text-sm">
-            <span>{dateRange.start}</span>
-            <span className="text-gray-400">~</span>
-            <span>{dateRange.end}</span>
-          </div>
-        </div>
-        {salesTrend.length > 0 ? (
-          <>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={salesTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-                <XAxis 
-                  dataKey="date" 
-                  tick={{ fill: '#6B7280', fontSize: 12 }}
-                  axisLine={{ stroke: '#E5E7EB' }}
-                />
-                <YAxis 
-                  tick={{ fill: '#6B7280', fontSize: 12 }}
-                  axisLine={{ stroke: '#E5E7EB' }}
-                  label={{ value: '만(원)', angle: -90, position: 'insideLeft', fill: '#6B7280' }}
-                />
-                <Tooltip 
-                  contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#fff' }}
-                  formatter={(value: number) => [`${value}만원`, '판매']}
-                />
-                <Bar dataKey="sales" radius={[4, 4, 0, 0]}>
-                  {salesTrend.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill="#EF4444" />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-            <div className="mt-2 flex gap-4 text-xs text-gray-500">
-              {salesTrend.map((item) => (
-                <div key={item.date} className="text-center">
-                  <div>{item.day}</div>
-                  <div className="mt-1">{item.date}</div>
-                </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="h-[300px] flex items-center justify-center text-gray-500">
-            데이터가 없습니다.
-          </div>
-        )}
-      </Card>
-
+      {/* 첫 번째 행: 매출 추이 + 판매 분석 */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 매출 추이 차트 */}
+        <Card title="매출 추이">
+          <div className="mb-4 flex items-center gap-4">
+            <input
+              type="date"
+              value={dateRange.start}
+              onChange={(e) => handleDateChange('start', e.target.value)}
+              className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <span className="text-gray-400">~</span>
+            <input
+              type="date"
+              value={dateRange.end}
+              onChange={(e) => handleDateChange('end', e.target.value)}
+              className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+          {loading ? (
+            <div className="h-[300px] flex items-center justify-center text-gray-500">
+              로딩 중...
+            </div>
+          ) : salesTrend.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={salesTrend}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                  <XAxis 
+                    dataKey="date" 
+                    tick={{ fill: '#6B7280', fontSize: 12 }}
+                    axisLine={{ stroke: '#E5E7EB' }}
+                  />
+                  <YAxis 
+                    tick={{ fill: '#6B7280', fontSize: 12 }}
+                    axisLine={{ stroke: '#E5E7EB' }}
+                    label={{ value: '만(원)', angle: -90, position: 'insideLeft', fill: '#6B7280' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#1F2937', border: 'none', borderRadius: '8px', color: '#fff' }}
+                    formatter={(value: number, name: string, props: any) => {
+                      const amount = value * 10000; // 만원을 원으로 변환
+                      const entry = props.payload;
+                      return [`${amount.toLocaleString()}원`, `${entry.day}요일 (${entry.date})`];
+                    }}
+                    labelFormatter={(label) => `날짜: ${label}`}
+                  />
+                  <Bar dataKey="sales" radius={[4, 4, 0, 0]}>
+                    {salesTrend.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill="#EF4444" />
+                    ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+              <div className="mt-2 flex gap-4 text-xs text-gray-500">
+                {salesTrend.map((item) => (
+                  <div key={item.date} className="text-center">
+                    <div>{item.day}</div>
+                    <div className="mt-1">{item.date}</div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="h-[300px] flex items-center justify-center text-gray-500">
+              데이터가 없습니다.
+            </div>
+          )}
+        </Card>
+
         {/* 판매 분석 */}
         <Card title="판매 분석">
           <div className="mb-4 flex items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-1.5 border border-gray-300 rounded text-sm">
-              <span>{dateRange.start}</span>
-              <span className="text-gray-400">~</span>
-              <span>{dateRange.end}</span>
-            </div>
+            <input
+              type="date"
+              value={analysisDateRange.start}
+              onChange={(e) => handleAnalysisDateChange('start', e.target.value)}
+              className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <span className="text-gray-400">~</span>
+            <input
+              type="date"
+              value={analysisDateRange.end}
+              onChange={(e) => handleAnalysisDateChange('end', e.target.value)}
+              className="px-3 py-1.5 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
           </div>
           
-          {/* Progress bars */}
-          <div className="space-y-4 mb-6">
-            {salesAnalysis.salesAnalysis.map((item) => (
+          {analysisLoading ? (
+            <div className="h-[300px] flex items-center justify-center text-gray-500">
+              로딩 중...
+            </div>
+          ) : (
+            <>
+              {/* Progress bars */}
+              <div className="space-y-4 mb-6">
+                {salesAnalysis.salesAnalysis.map((item) => (
               <div key={item.category}>
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-sm font-medium text-gray-700">{item.category}</span>
@@ -189,27 +340,76 @@ export default function DashboardClient({
                     style={{ width: `${item.percentage}%`, backgroundColor: item.color }}
                   />
                 </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Product categories */}
-          <div className="space-y-3">
-            {salesAnalysis.productCategories.length > 0 ? (
-              salesAnalysis.productCategories.map((category, index) => (
-                <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-700">{index + 1}. {category.name}</span>
-                  </div>
-                  <div className="text-right">
-                    <div className="text-sm font-medium text-gray-900">{category.amount}원</div>
-                    <div className="text-xs text-gray-500">({category.count}건)</div>
-                  </div>
                 </div>
-              ))
-            ) : (
-              <div className="text-sm text-gray-500 py-4">카테고리 데이터가 없습니다.</div>
-            )}
+              ))}
+            </div>
+
+            {/* Product categories */}
+            <div className="space-y-3">
+              {salesAnalysis.productCategories.length > 0 ? (
+                salesAnalysis.productCategories.map((category, index) => (
+                  <div key={index} className="flex justify-between items-center py-2 border-b border-gray-100 last:border-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-gray-700">{index + 1}. {category.name}</span>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-medium text-gray-900">{category.amount}원</div>
+                      <div className="text-xs text-gray-500">({category.count}건)</div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-gray-500 py-4">카테고리 데이터가 없습니다.</div>
+              )}
+            </div>
+            </>
+          )}
+        </Card>
+      </div>
+
+      {/* 두 번째 행: 최근 판매 내역 + 상품 순위 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* 최근 판매 내역 */}
+        <Card title="최근 판매 내역">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">영수증 번호</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">제품 이름</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">분류</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">총 방문 횟수</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recentSales.length > 0 ? (
+                  recentSales.map((sale, index) => (
+                    <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-3 px-4 text-sm text-gray-900">{sale.receipt}</td>
+                      <td className="py-3 px-4 text-sm text-gray-900">{sale.product}</td>
+                      <td className="py-3 px-4 text-sm">
+                        {sale.category === "리필" ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
+                            리필
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                            상품
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-gray-900">{sale.visits}회</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="py-8 text-center text-sm text-gray-500">
+                      최근 판매 내역이 없습니다.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </Card>
 
@@ -235,42 +435,6 @@ export default function DashboardClient({
           </div>
         </Card>
       </div>
-
-      {/* 최근 판매 내역 */}
-      <Card title="최근 판매 내역">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">영수증 번호</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">제품 이름</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">가격</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">분류</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-700">총 방문 횟수</th>
-              </tr>
-            </thead>
-            <tbody>
-              {recentSales.length > 0 ? (
-                recentSales.map((sale, index) => (
-                  <tr key={index} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-3 px-4 text-sm text-gray-900">{sale.receipt}</td>
-                    <td className="py-3 px-4 text-sm text-gray-900">{sale.product}</td>
-                    <td className="py-3 px-4 text-sm text-gray-900">{sale.price}원</td>
-                    <td className="py-3 px-4 text-sm text-gray-900">{sale.category}</td>
-                    <td className="py-3 px-4 text-sm text-gray-900">{sale.visits}회</td>
-                  </tr>
-                ))
-              ) : (
-                <tr>
-                  <td colSpan={5} className="py-8 text-center text-sm text-gray-500">
-                    최근 판매 내역이 없습니다.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </Card>
     </div>
   )
 }

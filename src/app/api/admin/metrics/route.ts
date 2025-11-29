@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
-import { supabaseClient } from "@/lib/supabase-client";
+import { supabaseServerClient } from "@/lib/supabase-client";
 
 export async function GET() {
   try {
     // 총 고객 수
-    const { count: totalCustomers, error: customersError } = await supabaseClient
+    const { count: totalCustomers, error: customersError } = await supabaseServerClient
       .from("customer")
       .select("*", { count: "exact", head: true });
 
@@ -12,8 +12,17 @@ export async function GET() {
       console.error("Supabase error (customers):", customersError);
     }
 
+    // 총 판매 물품 수 (receipt_item 개수)
+    const { count: totalProducts, error: productsError } = await supabaseServerClient
+      .from("receipt_item")
+      .select("*", { count: "exact", head: true });
+
+    if (productsError) {
+      console.error("Supabase error (products):", productsError);
+    }
+
     // 총 매출 (receipt의 total_amount 합계)
-    const { data: receipts, error: receiptsError } = await supabaseClient
+    const { data: receipts, error: receiptsError } = await supabaseServerClient
       .from("receipt")
       .select("total_amount");
 
@@ -25,7 +34,7 @@ export async function GET() {
       receipts?.reduce((sum, r) => sum + (r.total_amount || 0), 0) || 0;
 
     // 총 리필 횟수 (customer_loyalty의 total_refill_count 합계)
-    const { data: loyalties, error: loyaltiesError } = await supabaseClient
+    const { data: loyalties, error: loyaltiesError } = await supabaseServerClient
       .from("customer_loyalty")
       .select("total_refill_count");
 
@@ -37,7 +46,7 @@ export async function GET() {
       loyalties?.reduce((sum, l) => sum + (l.total_refill_count || 0), 0) || 0;
 
     // 총 탄소 절감량 (receipt_item의 total_carbon_emission (kg) 합계)
-    const { data: receiptItems, error: itemsError } = await supabaseClient
+    const { data: receiptItems, error: itemsError } = await supabaseServerClient
       .from("receipt_item")
       .select('"total_carbon_emission"');
 
@@ -50,6 +59,7 @@ export async function GET() {
 
     return NextResponse.json({
       totalCustomers: totalCustomers || 0,
+      totalProducts: totalProducts || 0,
       totalRevenue,
       totalRefills,
       co2SavedKg,
