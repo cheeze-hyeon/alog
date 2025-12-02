@@ -38,7 +38,7 @@ export default function EnvironmentSection({ stats, purchaseItems, selectedYear 
               <p className="text-[15px] text-black">플라스틱</p>
               <p className="text-[15px] text-black">{plasticReductionG}g 감소</p>
             </div>
-            <p className="text-xs text-black/50">500ml 플라스틱 1개(30g) 생산 방지</p>
+            <p className="text-xs text-black/50">100g 리필당 100ml 용기 1개(18g) 절감</p>
             <div className="flex items-start gap-1 mt-2">
               <span className="text-xs mt-0.5">💡</span>
               <p className="text-xs leading-relaxed" style={{ color: "#E04F4E" }}>
@@ -53,7 +53,7 @@ export default function EnvironmentSection({ stats, purchaseItems, selectedYear 
               <p className="text-[15px] text-black">나무</p>
               <p className="text-[15px] text-black">{treeReduction.toFixed(2)} 그루</p>
             </div>
-            <p className="text-xs text-black/50">리필 1번 시 약 0.03 그루</p>
+            <p className="text-xs text-black/50">CO2 6.6kg 감축 = 나무 1그루 심은 효과</p>
             <div className="flex items-start gap-1 mt-2">
               <span className="text-xs mt-0.5">💡</span>
               <p className="text-xs leading-relaxed" style={{ color: "#E04F4E" }}>
@@ -68,7 +68,7 @@ export default function EnvironmentSection({ stats, purchaseItems, selectedYear 
               <p className="text-[15px] text-black">CO2</p>
               <p className="text-[15px] text-black">{co2ReductionKg.toFixed(1)}kg 감축</p>
             </div>
-            <p className="text-xs text-black/50">500ml 당 0.68kg 감축 효과</p>
+            <p className="text-xs text-black/50">100g 리필당 약 0.04kg 감축 효과</p>
             <div className="flex items-start gap-1 mt-2">
               <span className="text-xs mt-0.5">💡</span>
               <p className="text-xs leading-relaxed" style={{ color: "#E04F4E" }}>

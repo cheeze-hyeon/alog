@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
         const productId = typeof item.productId === "string" ? parseInt(item.productId, 10) : item.productId;
         const { data: product, error: productError } = await supabaseServerClient
           .from("product")
-          .select("current_carbon_emission")
+          .select("current_carbon_emission, is_refill, pricing_unit")
           .eq("id", productId)
           .maybeSingle();
 
@@ -87,10 +87,6 @@ export async function POST(request: NextRequest) {
         if (productError && productError.code !== "PGRST116") {
           console.error(`제품 조회 오류 (제품 ID: ${productId}):`, JSON.stringify(productError, null, 2));
         }
-
-        // current_carbon_emission은 g당 kg 단위로 가정
-        // (예: 0.001 kg/g = 1g당 0.001kg)
-        const carbonEmissionPerG = product?.current_carbon_emission || null;
 
         // DB 스키마의 필드명은 ml이지만 실제 값은 g 단위로 저장
         // 실제 컬럼명에 공백과 괄호가 포함되어 있으므로 따옴표로 감싸서 사용
@@ -101,8 +97,19 @@ export async function POST(request: NextRequest) {
           "purchase_unit_price": item.unitPricePerG, // 실제로는 g당 단가
         };
 
-        // 탄소 배출량 관련 컬럼 (존재하는 경우)
-        if (carbonEmissionPerG !== null) {
+        // 탄소 배출량 계산 (리필 상품인 경우)
+        const isRefill = product?.is_refill ?? false;
+        const pricingUnit = product?.pricing_unit || "g";
+        
+        if (isRefill && pricingUnit === "g") {
+          // 리필 상품인 경우: 구매량(g) 기반으로 CO2 절감량 계산
+          const { calculateCO2Reduction } = await import("@/lib/carbon-emission");
+          const co2Reduction = calculateCO2Reduction(item.volumeG);
+          receiptItemData["purchase_carbon_emission_base"] = co2Reduction / item.volumeG; // g당 CO2 절감량 (kg/g)
+          receiptItemData["total_carbon_emission"] = co2Reduction; // 총 CO2 절감량 (kg)
+        } else if (product?.current_carbon_emission !== null && product?.current_carbon_emission !== undefined) {
+          // 기존 로직: current_carbon_emission이 있는 경우
+          const carbonEmissionPerG = product.current_carbon_emission;
           receiptItemData["purchase_carbon_emission_base"] = carbonEmissionPerG; // 실제로는 g당 탄소 배출량 (kg/g)
           receiptItemData["total_carbon_emission"] = carbonEmissionPerG * item.volumeG; // g당 kg * g = kg
         }

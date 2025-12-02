@@ -9,6 +9,7 @@ import type {
   Product,
 } from "@/types";
 import { calculateCharacterProgress } from "@/lib/character-levels";
+import { calculateCO2Reduction, calculatePlasticReduction } from "@/lib/carbon-emission";
 import { DUMMY_BADGES } from "@/types/badge";
 
 /**
@@ -85,7 +86,10 @@ export async function GET(request: NextRequest) {
 
       if (error) {
         console.error("Supabase error (customer):", error);
-        return NextResponse.json({ error: "고객 정보 조회 중 오류가 발생했습니다." }, { status: 500 });
+        return NextResponse.json(
+          { error: "고객 정보 조회 중 오류가 발생했습니다." },
+          { status: 500 },
+        );
       }
 
       customer = data;
@@ -124,19 +128,23 @@ export async function GET(request: NextRequest) {
     }
 
     const totalPurchaseCount = receipts?.length || 0;
-    
+
     // 실제 구매 금액 합산 (receipt의 total_amount 합계)
-    const actualAccumulatedAmount = receipts?.reduce((sum, r) => sum + (r.total_amount || 0), 0) || 0;
+    const actualAccumulatedAmount =
+      receipts?.reduce((sum, r) => sum + (r.total_amount || 0), 0) || 0;
     console.log("📋 Actual accumulated amount from receipts:", actualAccumulatedAmount);
 
     // 고객의 영수증 아이템에서 CO2 감축량 합계 계산 및 구매 내역 조회
     let co2ReductionKg = 0;
+    let totalPlasticReductionG = 0;
     const purchaseItems: PurchaseItem[] = [];
 
     if (receipts && receipts.length > 0) {
       const { data: receiptItems, error: itemsError } = await supabaseServerClient
         .from("receipt_item")
-        .select('id, total_carbon_emission, receipt_id, product_id, purchase_quantity, purchase_unit_price')
+        .select(
+          "id, total_carbon_emission, receipt_id, product_id, purchase_quantity, purchase_unit_price",
+        )
         .in(
           "receipt_id",
           receipts.map((r) => r.id),
@@ -147,14 +155,16 @@ export async function GET(request: NextRequest) {
       }
 
       console.log("📋 Receipt items found:", receiptItems?.length || 0);
-      console.log("📋 Receipt IDs:", receipts.map((r) => r.id));
-
-      co2ReductionKg =
-        receiptItems?.reduce((sum, item) => sum + (item["total_carbon_emission"] || 0), 0) || 0;
+      console.log(
+        "📋 Receipt IDs:",
+        receipts.map((r) => r.id),
+      );
 
       // 구매 내역 조회 (상품 정보 포함)
       if (receiptItems && receiptItems.length > 0) {
-        const productIds = [...new Set(receiptItems.map((item) => item.product_id).filter(Boolean))];
+        const productIds = [
+          ...new Set(receiptItems.map((item) => item.product_id).filter(Boolean)),
+        ];
 
         let products: any[] = [];
         if (productIds.length > 0) {
@@ -214,25 +224,50 @@ export async function GET(request: NextRequest) {
           const unitPrice = item["purchase_unit_price"] || 0; // 단가 (원/g 또는 원/개)
           const price = Math.round(quantity * unitPrice);
 
-          console.log(`📋 Purchase item: ${product?.name || "Unknown"}, price: ${price}, date: ${dateStr}`);
+          console.log(
+            `📋 Purchase item: ${product?.name || "Unknown"}, price: ${price}, date: ${dateStr}`,
+          );
 
           // product의 is_refill 필드 사용 (없으면 카테고리 기반으로 판단)
           const category = (product?.category as string) || "";
           const isRefillFromDB = product?.is_refill !== undefined ? product.is_refill : null;
-          const isRefill = isRefillFromDB !== null 
-            ? isRefillFromDB 
-            : (category !== "snack_drink_base" && 
-               category !== "cooking_ingredient" && 
-               category !== "tea");
+          const isRefill =
+            isRefillFromDB !== null
+              ? isRefillFromDB
+              : category !== "snack_drink_base" &&
+                category !== "cooking_ingredient" &&
+                category !== "tea";
 
           // pricing_unit 가져오기 (기본값은 "g")
           const pricingUnit = product?.pricing_unit || "g";
 
-          // 플라스틱 감축량 계산 (리필 상품의 경우)
-          // 이미지 기준: 200g 샴푸 = 3100g 감축 (약 15.5g/g), 100g 샴푸 = 590g 감축 (약 5.9g/g)
-          // 상품별로 다를 수 있으므로 평균값(약 10g/g) 사용, 추후 상품별 계수로 개선 가능
-          // 개 단위 상품은 플라스틱 감축량이 없음
-          const plasticReductionG = isRefill && pricingUnit === "g" ? Math.round(quantity * 10) : 0; // 리필 상품만 플라스틱 감축
+          // CO2 절감량 및 플라스틱 절감량 계산
+          let itemCo2Reduction = 0;
+          let plasticReductionG = 0;
+
+          // 리필 상품이고 g 단위인 경우 항상 새로 계산
+          if (isRefill && pricingUnit === "g" && quantity > 0) {
+            // 리필 상품은 항상 새로운 계산 방식으로 계산
+            itemCo2Reduction = calculateCO2Reduction(quantity);
+            plasticReductionG = calculatePlasticReduction(quantity);
+
+            console.log(
+              `📊 리필 계산 (제품: ${product?.name || "Unknown"}, 수량: ${quantity}g):`,
+              `CO2=${itemCo2Reduction.toFixed(4)}kg, 플라스틱=${plasticReductionG}g`,
+            );
+          } else if (isRefill && pricingUnit === "g") {
+            // 리필이지만 수량이 0인 경우
+            itemCo2Reduction = 0;
+            plasticReductionG = 0;
+          } else {
+            // 리필이 아닌 경우: DB에 저장된 값 사용 또는 기존 로직
+            itemCo2Reduction = item["total_carbon_emission"] || 0;
+            plasticReductionG = isRefill && pricingUnit === "g" ? Math.round(quantity * 10) : 0;
+          }
+
+          // CO2 절감량 누적
+          co2ReductionKg += itemCo2Reduction;
+          totalPlasticReductionG += plasticReductionG;
 
           purchaseItems.push({
             id: item.id,
@@ -259,29 +294,42 @@ export async function GET(request: NextRequest) {
     // 환경 지표 계산
     const refillCount = loyalty?.total_refill_count || 0;
 
-    // CO2 감축량이 없으면 더미 계산 (리필당 0.68kg 감축)
+    console.log("📊 환경 지표 계산 결과:");
+    console.log(`  - CO2 절감량: ${co2ReductionKg.toFixed(4)}kg`);
+    console.log(`  - 플라스틱 절감량: ${totalPlasticReductionG}g`);
+    console.log(`  - 리필 횟수: ${refillCount}`);
+
+    // CO2 감축량이 없고 리필 횟수가 있는 경우, 리필 횟수 기반으로 계산 (fallback)
     if (co2ReductionKg === 0 && refillCount > 0) {
-      co2ReductionKg = refillCount * 0.68;
+      // 리필 1회당 평균 100g 구매로 가정
+      co2ReductionKg = calculateCO2Reduction(refillCount * 100);
+      console.log(`  - Fallback CO2 계산: ${co2ReductionKg.toFixed(4)}kg (리필 ${refillCount}회)`);
     }
 
-    // 플라스틱/나무 감축량 더미 계산 (추후 실제 계산 로직으로 교체 가능)
-    // 이미지 기준: 리필 1회당 플라스틱 약 26g, 나무 약 0.0294그루 절감
-    // 플라스틱은 g 단위로 저장 (910g = 35회 * 약 26g)
-    const plasticReductionG = refillCount * 26; // g 단위
-    const plasticReductionKg = plasticReductionG / 1000; // kg로 변환 (표시용)
-    const treeReduction = refillCount * 0.0294; // 약 0.03 그루
+    // 플라스틱 감축량이 없고 리필 횟수가 있는 경우, 리필 횟수 기반으로 계산 (fallback)
+    if (totalPlasticReductionG === 0 && refillCount > 0) {
+      totalPlasticReductionG = calculatePlasticReduction(refillCount * 100);
+      console.log(`  - Fallback 플라스틱 계산: ${totalPlasticReductionG}g (리필 ${refillCount}회)`);
+    }
+
+    // 나무 감축량 계산 (CO2 감축량 기반)
+    // 30년생 소나무 1그루의 연간 CO2 흡수량: 6.6kg
+    // CO2 감축량 6.6kg = 나무 1그루를 심은 효과
+    const TREE_CO2_ABSORPTION_KG = 6.6; // 30년생 소나무 1그루의 연간 CO2 흡수량
+    const treeReduction = co2ReductionKg / TREE_CO2_ABSORPTION_KG;
 
     const stats: EnvironmentStats = {
       refillCount,
-      plasticReductionKg: Math.round(plasticReductionKg * 100) / 100, // 소수점 둘째 자리까지
-      plasticReductionG: Math.round(plasticReductionG), // g 단위
+      plasticReductionKg: Math.round((totalPlasticReductionG / 1000) * 100) / 100, // 소수점 둘째 자리까지
+      plasticReductionG: Math.round(totalPlasticReductionG), // g 단위
       treeReduction: Math.round(treeReduction * 100) / 100, // 소수점 둘째 자리까지
       co2ReductionKg: Math.round(co2ReductionKg * 10) / 10, // 소수점 첫째 자리까지
     };
 
     // 캐릭터 진행 상황 계산
     // customer_loyalty의 값이 있으면 사용하고, 없으면 receipt의 total_amount 합계 사용
-    const accumulatedPurchaseAmount = loyalty?.accumulated_purchase_amount || actualAccumulatedAmount;
+    const accumulatedPurchaseAmount =
+      loyalty?.accumulated_purchase_amount || actualAccumulatedAmount;
     console.log("📋 Using accumulated amount for level calculation:", accumulatedPurchaseAmount);
     console.log("📋 From loyalty:", loyalty?.accumulated_purchase_amount);
     console.log("📋 From receipts:", actualAccumulatedAmount);
@@ -320,6 +368,9 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(myPageData);
   } catch (error) {
     console.error("Error fetching mypage data:", error);
-    return NextResponse.json({ error: "마이페이지 데이터 조회 중 오류가 발생했습니다." }, { status: 500 });
+    return NextResponse.json(
+      { error: "마이페이지 데이터 조회 중 오류가 발생했습니다." },
+      { status: 500 },
+    );
   }
 }
