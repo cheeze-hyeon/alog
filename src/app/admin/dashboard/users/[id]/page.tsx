@@ -64,6 +64,10 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     if (!customerId) return
 
     async function fetchData() {
+      // customerId가 null이 아님을 보장하기 위해 로컬 변수에 저장
+      const id = customerId
+      if (!id) return
+
       try {
         setLoading(true)
 
@@ -71,7 +75,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
         const customerRes = await fetch(`${getBaseUrl()}/api/admin/customers`, { cache: 'no-store' })
         if (customerRes.ok) {
           const customers: Customer[] = await customerRes.json()
-          const foundCustomer = customers.find((c) => c.id === parseInt(customerId, 10))
+          const foundCustomer = customers.find((c) => c.id === parseInt(id, 10))
           if (foundCustomer) {
             setCustomer(foundCustomer)
           }
@@ -79,7 +83,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
         // 영수증 목록 조회
         const receiptsRes = await fetch(
-          `${getBaseUrl()}/api/admin/customers/${customerId}/receipts`,
+          `${getBaseUrl()}/api/admin/customers/${id}/receipts`,
           { cache: 'no-store' }
         )
         if (receiptsRes.ok) {
@@ -89,7 +93,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
         // 고객 상세 정보 조회 (레벨, 방문 횟수, 도장 개수 등)
         const detailRes = await fetch(
-          `${getBaseUrl()}/api/admin/customers/${customerId}/detail`,
+          `${getBaseUrl()}/api/admin/customers/${id}/detail`,
           { cache: 'no-store' }
         )
         if (detailRes.ok) {
@@ -164,7 +168,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     let imagePath = style.images[0]
     if (grade === 1 && style.images.length > 1 && customerId) {
       // 고객 ID를 기반으로 랜덤 선택 (같은 고객은 항상 같은 이미지)
-      const randomIndex = parseInt(customerId) % style.images.length
+      const randomIndex = parseInt(customerId, 10) % style.images.length
       imagePath = style.images[randomIndex]
     }
 

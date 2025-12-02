@@ -12,6 +12,7 @@ async function getProduct(id: string): Promise<Product> {
     category: null,
     current_price: null,
     current_carbon_emission: null,
+    pricing_unit: "g",
   };
   try {
     const res = await fetch(`${getBaseUrl()}/api/products/${id}`, { cache: "no-store" });

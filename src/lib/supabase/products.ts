@@ -26,7 +26,7 @@ interface GetProductsResult {
 
 // Supabase Product를 Admin Product로 변환
 async function transformProduct(
-  product: SupabaseProduct & { is_refill?: boolean },
+  product: Pick<SupabaseProduct, 'id' | 'name' | 'category' | 'current_price'> & { is_refill?: boolean },
   salesData: Map<number, { sales: number; revenue: number }>
 ): Promise<Product> {
   // is_refill 필드 사용
