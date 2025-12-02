@@ -24,8 +24,8 @@ type Props = {
   totalAmount: number;
 };
 
-function formatCurrency(krw: number) {
-  return new Intl.NumberFormat("ko-KR", { style: "currency", currency: "KRW" }).format(krw);
+function formatNumberWithWon(num: number) {
+  return new Intl.NumberFormat("ko-KR").format(num) + "원";
 }
 
 export default function ReceiptContent({
@@ -102,12 +102,12 @@ export default function ReceiptContent({
                   <div className={`flex flex-col gap-1 ${itemIndex === 0 ? "pt-4" : ""}`}>
                     <div className="flex justify-between text-[15px]">
                       <span>{item.name}</span>
-                      <span>{formatCurrency(item.total)}</span>
+                      <span>{formatNumberWithWon(item.total)}</span>
                     </div>
                     <p className="text-xs text-black/50">
                       {item.isRefill
-                        ? `${item.purchase_quantity}g x ${formatCurrency(item.purchase_unit_price)}/g`
-                        : `${item.purchase_quantity}개 x ${formatCurrency(item.purchase_unit_price)}/개`}
+                        ? `${item.purchase_quantity}g x ${formatNumberWithWon(item.purchase_unit_price)}/g`
+                        : `${item.purchase_quantity}개 x ${formatNumberWithWon(item.purchase_unit_price)}/개`}
                     </p>
                     <button
                       onClick={() => handleOpenModal(item.product_id)}
@@ -130,7 +130,7 @@ export default function ReceiptContent({
             <div className="border-b border-[#959595]/50 " />
             <div className="flex justify-between text-[15px] font-medium mt-4">
               <span>합계</span>
-              <span>{formatCurrency(totalAmount)}</span>
+              <span>{formatNumberWithWon(totalAmount)}</span>
             </div>
             <div className="border-b border-[#959595]/50 my-4" />
           </div>
