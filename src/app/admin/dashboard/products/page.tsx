@@ -1,30 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useTransition } from 'react'
 import Card from '@/components/ui/Card'
 import PageHeader from '@/components/ui/PageHeader'
 import SearchBar from '@/components/ui/SearchBar'
 import { Plus, Edit, Trash2, X } from 'lucide-react'
-import { getBaseUrl } from '@/lib/env'
 import { PRODUCT_CATEGORIES, CATEGORY_LABELS } from '@/types/product'
-
-type Product = {
-  id: number
-  name: string
-  category: string
-  price: number
-  stock: number
-  sales: number
-  revenue: number
-  type: '리필' | '일반'
-  status: '판매중' | '품절' | '단종'
-}
+import { getProducts, addProduct, deleteProduct, type AdminProduct } from './actions'
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<Product[]>([])
+  const [products, setProducts] = useState<AdminProduct[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [supabaseConnected, setSupabaseConnected] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
@@ -38,6 +25,7 @@ export default function ProductsPage() {
     is_refill: false,
   })
   const [submitting, setSubmitting] = useState(false)
+  const [isPending, startTransition] = useTransition()
 
   useEffect(() => {
     fetchProducts()
@@ -46,24 +34,10 @@ export default function ProductsPage() {
   const fetchProducts = async () => {
     try {
       setLoading(true)
-      
-      // API 라우트 사용
-      const url = searchQuery 
-        ? `${getBaseUrl()}/api/admin/products?search=${encodeURIComponent(searchQuery)}`
-        : `${getBaseUrl()}/api/admin/products`
-      
-      const res = await fetch(url, { cache: 'no-store' })
-      
-      if (!res.ok) {
-        throw new Error('Failed to fetch products')
-      }
-
-      const data: Product[] = await res.json()
-      setSupabaseConnected(true)
+      const data = await getProducts(searchQuery || undefined)
       setProducts(data)
     } catch (error) {
       console.error('Error:', error)
-      setSupabaseConnected(false)
       setProducts([])
     } finally {
       setLoading(false)
@@ -73,7 +47,9 @@ export default function ProductsPage() {
   // 검색어 변경 시 다시 가져오기
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchProducts()
+      startTransition(() => {
+        fetchProducts()
+      })
     }, 300) // 300ms 디바운스
 
     return () => clearTimeout(timer)
@@ -85,13 +61,9 @@ export default function ProductsPage() {
     }
 
     try {
-      const res = await fetch(`${getBaseUrl()}/api/admin/products/${id}`, {
-        method: 'DELETE',
-      })
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}))
-        alert(errorData.error || '삭제 중 오류가 발생했습니다.')
+      const result = await deleteProduct(id)
+      if (!result.success) {
+        alert(result.error || '삭제 중 오류가 발생했습니다.')
         return
       }
 
@@ -128,15 +100,9 @@ export default function ProductsPage() {
         is_refill: formData.is_refill,
       }
 
-      const res = await fetch(`${getBaseUrl()}/api/admin/products`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(productData),
-      })
-
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}))
-        alert(errorData.error || '상품 추가 중 오류가 발생했습니다.')
+      const result = await addProduct(productData)
+      if (!result.success) {
+        alert(result.error || '상품 추가 중 오류가 발생했습니다.')
         return
       }
 
@@ -164,11 +130,6 @@ export default function ProductsPage() {
   }
   return (
     <div className="space-y-6 bg-white">
-      {/* Supabase Connection Status */}
-      <div className={`text-sm font-medium ${supabaseConnected ? 'text-green-600' : 'text-yellow-600'}`}>
-        {supabaseConnected ? '✅ Supabase 연결됨' : '⚠️ 더미 데이터 사용 중'}
-      </div>
-
       {/* Header */}
       <PageHeader 
         title="상품 관리"
