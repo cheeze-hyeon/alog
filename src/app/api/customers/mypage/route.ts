@@ -121,18 +121,11 @@ export async function GET(request: NextRequest) {
       console.error("Supabase error (receipts):", receiptsError);
     }
 
-    console.log("📋 Customer ID:", customer.id);
-    console.log("📋 Receipts found:", receipts?.length || 0);
-    if (receipts && receipts.length > 0) {
-      console.log("📋 Receipt details:", receipts);
-    }
-
     const totalPurchaseCount = receipts?.length || 0;
 
     // 실제 구매 금액 합산 (receipt의 total_amount 합계)
     const actualAccumulatedAmount =
       receipts?.reduce((sum, r) => sum + (r.total_amount || 0), 0) || 0;
-    console.log("📋 Actual accumulated amount from receipts:", actualAccumulatedAmount);
 
     // 고객의 영수증 아이템에서 CO2 감축량 합계 계산 및 구매 내역 조회
     let co2ReductionKg = 0;
@@ -153,12 +146,6 @@ export async function GET(request: NextRequest) {
       if (itemsError) {
         console.error("Supabase error (receipt_items):", itemsError);
       }
-
-      console.log("📋 Receipt items found:", receiptItems?.length || 0);
-      console.log(
-        "📋 Receipt IDs:",
-        receipts.map((r) => r.id),
-      );
 
       // 구매 내역 조회 (상품 정보 포함)
       if (receiptItems && receiptItems.length > 0) {
@@ -218,15 +205,9 @@ export async function GET(request: NextRequest) {
           const fullYear = visitDate.getFullYear();
           const visitDateStr = `${fullYear}.${month}.${day}`;
 
-          console.log(`📅 Date parsed: ${receipt.visit_date} -> ${visitDateStr}`);
-
           const quantity = item["purchase_quantity"] || 0; // 수량 (g 또는 개)
           const unitPrice = item["purchase_unit_price"] || 0; // 단가 (원/g 또는 원/개)
           const price = Math.round(quantity * unitPrice);
-
-          console.log(
-            `📋 Purchase item: ${product?.name || "Unknown"}, price: ${price}, date: ${dateStr}`,
-          );
 
           // product의 is_refill 필드 사용 (없으면 카테고리 기반으로 판단)
           const category = (product?.category as string) || "";
@@ -250,11 +231,6 @@ export async function GET(request: NextRequest) {
             // 리필 상품은 항상 새로운 계산 방식으로 계산
             itemCo2Reduction = calculateCO2Reduction(quantity);
             plasticReductionG = calculatePlasticReduction(quantity);
-
-            console.log(
-              `📊 리필 계산 (제품: ${product?.name || "Unknown"}, 수량: ${quantity}g):`,
-              `CO2=${itemCo2Reduction.toFixed(4)}kg, 플라스틱=${plasticReductionG}g`,
-            );
           } else if (isRefill && pricingUnit === "g") {
             // 리필이지만 수량이 0인 경우
             itemCo2Reduction = 0;
@@ -294,22 +270,15 @@ export async function GET(request: NextRequest) {
     // 환경 지표 계산
     const refillCount = loyalty?.total_refill_count || 0;
 
-    console.log("📊 환경 지표 계산 결과:");
-    console.log(`  - CO2 절감량: ${co2ReductionKg.toFixed(4)}kg`);
-    console.log(`  - 플라스틱 절감량: ${totalPlasticReductionG}g`);
-    console.log(`  - 리필 횟수: ${refillCount}`);
-
     // CO2 감축량이 없고 리필 횟수가 있는 경우, 리필 횟수 기반으로 계산 (fallback)
     if (co2ReductionKg === 0 && refillCount > 0) {
       // 리필 1회당 평균 100g 구매로 가정
       co2ReductionKg = calculateCO2Reduction(refillCount * 100);
-      console.log(`  - Fallback CO2 계산: ${co2ReductionKg.toFixed(4)}kg (리필 ${refillCount}회)`);
     }
 
     // 플라스틱 감축량이 없고 리필 횟수가 있는 경우, 리필 횟수 기반으로 계산 (fallback)
     if (totalPlasticReductionG === 0 && refillCount > 0) {
       totalPlasticReductionG = calculatePlasticReduction(refillCount * 100);
-      console.log(`  - Fallback 플라스틱 계산: ${totalPlasticReductionG}g (리필 ${refillCount}회)`);
     }
 
     // 나무 감축량 계산 (CO2 감축량 기반)
@@ -330,9 +299,6 @@ export async function GET(request: NextRequest) {
     // customer_loyalty의 값이 있으면 사용하고, 없으면 receipt의 total_amount 합계 사용
     const accumulatedPurchaseAmount =
       loyalty?.accumulated_purchase_amount || actualAccumulatedAmount;
-    console.log("📋 Using accumulated amount for level calculation:", accumulatedPurchaseAmount);
-    console.log("📋 From loyalty:", loyalty?.accumulated_purchase_amount);
-    console.log("📋 From receipts:", actualAccumulatedAmount);
     const characterProgress = calculateCharacterProgress(accumulatedPurchaseAmount);
 
     // 배지 데이터 (더미 데이터 - 추후 동적 로직으로 교체 가능)

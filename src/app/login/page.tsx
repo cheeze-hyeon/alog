@@ -19,9 +19,7 @@ function LoginContent() {
   }, [code, isProcessing]);
 
   const handleKakaoCallback = async (authCode: string) => {
-    console.log("🔵 [로그인 페이지] 카카오 콜백 처리 시작", { code: authCode });
     try {
-      console.log("🔄 [API 호출] /api/auth/kakao/callback 요청");
       const response = await fetch("/api/auth/kakao/callback", {
         method: "POST",
         headers: {
@@ -29,8 +27,6 @@ function LoginContent() {
         },
         body: JSON.stringify({ code: authCode }),
       });
-
-      console.log("📡 [API 응답] 상태:", response.status);
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
@@ -41,13 +37,11 @@ function LoginContent() {
       }
 
       const data = await response.json();
-      console.log("✅ [API 성공] 로그인 응답:", data);
 
       // 로그인 성공 후 마이페이지로 리다이렉트
       const redirectPath = data.user?.kakaoId 
         ? `/mypage?kakao_id=${data.user.kakaoId}`
         : "/";
-      console.log("🚀 [리다이렉트] 이동할 경로:", redirectPath);
       
       if (data.user?.kakaoId) {
         router.push(redirectPath);
@@ -62,8 +56,6 @@ function LoginContent() {
   };
 
   const handleLogin = useCallback(() => {
-    console.log("🔵 [로그인 페이지] 카카오 로그인 버튼 클릭");
-    console.log("🔄 [리다이렉트] /api/auth/kakao/login으로 이동");
     window.location.href = "/api/auth/kakao/login";
   }, []);
 

@@ -165,11 +165,6 @@ function CheckoutContent() {
               phone: customerPhone,
             };
 
-            // 📋 전송할 고객 생성 데이터 로깅 (프론트엔드)
-            console.log("=== 프론트엔드에서 서버로 전송하는 고객 생성 데이터 ===");
-            console.log("전송 시간:", new Date().toISOString());
-            console.log("전송 데이터:", JSON.stringify(customerCreateBody, null, 2));
-            console.log("==================================================");
 
             const createResponse = await fetch("/api/pos/customers", {
               method: "POST",
@@ -212,22 +207,6 @@ function CheckoutContent() {
         totalAmount: subTotal - discount,
       };
 
-      // 📋 전송할 결제 데이터 로깅 (프론트엔드)
-      console.log("=== 프론트엔드에서 서버로 전송하는 결제 데이터 ===");
-      console.log("전송 시간:", new Date().toISOString());
-      console.log("전송 데이터:", JSON.stringify(paymentBody, null, 2));
-      console.log(
-        "상품 상세:",
-        cart.map((item) => ({
-          productId: item.productId,
-          name: item.name,
-          volumeG: item.volumeG,
-          unitPricePerG: item.unitPricePerG,
-          amount: item.amount,
-        })),
-      );
-      console.log("================================================");
-
       const response = await fetch("/api/pos/payment", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -236,14 +215,6 @@ function CheckoutContent() {
 
       if (!response.ok) {
         const errorData = await response.json();
-        console.error("=== 결제 API 오류 ===");
-        console.error("상태 코드:", response.status);
-        console.error("오류 데이터:", JSON.stringify(errorData, null, 2));
-        console.error("오류 코드:", errorData.code);
-        console.error("오류 메시지:", errorData.error);
-        console.error("오류 상세:", errorData.details);
-        console.error("오류 힌트:", errorData.hint);
-        console.error("====================");
 
         // 실제 오류 메시지 사용 (더 자세한 정보 포함)
         const errorMessage = errorData.error || errorData.message || "데이터 전송 실패";

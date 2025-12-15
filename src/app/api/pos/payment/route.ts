@@ -11,14 +11,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { customerId, items, totalAmount } = body;
 
-    // 📋 서버로 전송된 데이터 로깅
-    console.log("=== 결제 데이터 전송 ===");
-    console.log("전송 시간:", new Date().toISOString());
-    console.log("고객 ID:", customerId);
-    console.log("총 금액:", totalAmount);
-    console.log("상품 목록:", JSON.stringify(items, null, 2));
-    console.log("========================");
-
     // ✅ 필수 데이터 검증
     if (!customerId || !Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "필수 정보가 누락되었습니다." }, { status: 400 });
@@ -39,9 +31,6 @@ export async function POST(request: NextRequest) {
       visit_date: new Date().toISOString(),
       total_amount: totalAmount,
     };
-
-    // 📋 데이터베이스에 저장되는 영수증 데이터 로깅
-    console.log("영수증 저장:", JSON.stringify(receiptData, null, 2));
 
     const { data: receipt, error: receiptError } = await supabaseServerClient
       .from("receipt")
@@ -113,9 +102,6 @@ export async function POST(request: NextRequest) {
           receiptItemData["purchase_carbon_emission_base"] = carbonEmissionPerG; // 실제로는 g당 탄소 배출량 (kg/g)
           receiptItemData["total_carbon_emission"] = carbonEmissionPerG * item.volumeG; // g당 kg * g = kg
         }
-
-        // 📋 데이터베이스에 저장되는 데이터 로깅
-        console.log(`영수증 아이템 저장 (제품 ID: ${item.productId}):`, JSON.stringify(receiptItemData, null, 2));
 
         const { data: receiptItem, error: itemError } = await supabaseServerClient
           .from("receipt_item")

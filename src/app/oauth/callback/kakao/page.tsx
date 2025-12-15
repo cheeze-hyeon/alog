@@ -44,8 +44,6 @@ function KakaoCallbackContent() {
     // 백엔드로 code 전달하여 로그인 처리
     const handleLogin = async () => {
       try {
-        console.log("🔵 [카카오 콜백] 로그인 프로세스 시작");
-        
         // 1. 카카오에서 받아온 콜백 데이터 저장
         const kakaoCallbackData = {
           code,
@@ -53,10 +51,8 @@ function KakaoCallbackContent() {
           errorDescription,
           allParams: Object.fromEntries(searchParams.entries()),
         };
-        console.log("📥 [카카오 콜백] 받은 데이터:", kakaoCallbackData);
         setDebugData({ kakaoCallback: kakaoCallbackData });
 
-        console.log("🔄 [API 호출] /api/auth/kakao/callback 요청 시작", { code });
         const response = await fetch("/api/auth/kakao/callback", {
           method: "POST",
           headers: {
@@ -64,8 +60,6 @@ function KakaoCallbackContent() {
           },
           body: JSON.stringify({ code }),
         });
-
-        console.log("📡 [API 응답] 상태:", response.status, response.statusText);
 
         if (!response.ok) {
           const errorData = await response.json().catch(() => ({}));
@@ -80,7 +74,6 @@ function KakaoCallbackContent() {
         }
 
         const data = await response.json();
-        console.log("✅ [API 성공] 로그인 응답 데이터:", data);
         
         // 2. API 응답 데이터 저장
         setDebugData((prev) => ({
@@ -89,15 +82,9 @@ function KakaoCallbackContent() {
         }));
 
         // 3. 로그인 성공 후 토큰(쿠키) 확인
-        console.log("🔐 [인증 확인] 쿠키 확인 시작");
         try {
           const authCheckResponse = await fetch("/api/auth/me");
           const authCheckData = await authCheckResponse.json();
-          console.log("🍪 [쿠키 확인] 인증 상태:", {
-            isAuthenticated: authCheckData.isAuthenticated,
-            user: authCheckData.user,
-            cookies: authCheckData.cookies,
-          });
           setAuthInfo(authCheckData);
           setDebugData((prev) => ({
             ...prev,
@@ -112,14 +99,12 @@ function KakaoCallbackContent() {
         }
 
         // 로그인 성공 후 마이페이지로 리다이렉트
-        console.log("🎉 [로그인 완료] 성공 상태로 변경");
         setStatus("success");
         setTimeout(() => {
           // kakao_id가 있으면 마이페이지로, 없으면 메인으로
           const redirectPath = data.user?.kakaoId 
             ? `/mypage?kakao_id=${data.user.kakaoId}`
             : "/";
-          console.log("🚀 [리다이렉트] 이동할 경로:", redirectPath);
           router.push(redirectPath);
         }, 5000); // 데이터 확인을 위해 5초로 연장
       } catch (err) {

@@ -96,12 +96,6 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { name, phone, kakao_id } = body || {};
 
-    // 📋 서버로 전송된 고객 데이터 로깅
-    console.log("=== 고객 생성 요청 ===");
-    console.log("전송 시간:", new Date().toISOString());
-    console.log("받은 데이터:", JSON.stringify({ name, phone, kakao_id }, null, 2));
-    console.log("======================");
-
     // name 또는 phone 중 하나는 필요
     if (!name && !phone) {
       return NextResponse.json({ error: "이름 또는 전화번호가 필요합니다." }, { status: 400 });
@@ -159,7 +153,6 @@ export async function POST(request: NextRequest) {
 
       if (existingByPhone) {
         // 기존 고객이 있으면 반환 (업데이트하지 않음)
-        console.log("기존 고객을 찾았습니다 (전화번호):", existingByPhone.id);
         return NextResponse.json(existingByPhone as Customer, { status: 200 });
       }
     }
@@ -193,9 +186,6 @@ export async function POST(request: NextRequest) {
       insertData.phone = phone.replace(/\D/g, "");
     }
 
-    // 📋 데이터베이스에 저장되는 고객 데이터 로깅
-    console.log("데이터베이스에 저장할 고객 데이터:", JSON.stringify(insertData, null, 2));
-
     const { data, error } = await supabaseServerClient
       .from("customer")
       .insert(insertData)
@@ -207,8 +197,6 @@ export async function POST(request: NextRequest) {
 
       // 중복 키 오류인 경우 (동시 요청 또는 전화번호로 재조회)
       if (error.code === "23505" || error.message?.includes("duplicate key")) {
-        console.log("중복 키 오류 발생. 전화번호로 기존 고객 재조회 시도...");
-
         // 전화번호로 기존 고객을 다시 조회
         if (phone) {
           const normalizedPhone = phone.replace(/\D/g, "");
@@ -219,7 +207,6 @@ export async function POST(request: NextRequest) {
             .maybeSingle();
 
           if (existingCustomer) {
-            console.log("기존 고객을 찾았습니다:", existingCustomer.id);
             return NextResponse.json(existingCustomer as Customer, { status: 200 });
           }
 
@@ -233,9 +220,6 @@ export async function POST(request: NextRequest) {
       const errorMessage = error.message || error.details || "고객 생성 중 오류가 발생했습니다.";
       return NextResponse.json({ error: errorMessage }, { status: 500 });
     }
-
-    // 📋 저장된 고객 데이터 로깅
-    console.log("저장된 고객 데이터:", JSON.stringify(data, null, 2));
 
     return NextResponse.json(data as Customer, { status: 201 });
   } catch (error: any) {

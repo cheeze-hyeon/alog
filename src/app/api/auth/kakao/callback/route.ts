@@ -40,8 +40,6 @@ export async function POST(request: NextRequest) {
 }
 
 async function handleKakaoCallback(code: string, state: string | null) {
-  console.log("🔵 [서버] 카카오 콜백 처리 시작", { code: code?.substring(0, 10) + "..." });
-  
   const clientId = process.env.KAKAO_CLIENT_ID;
   const clientSecret = process.env.KAKAO_CLIENT_SECRET;
   const redirectUri = process.env.KAKAO_REDIRECT_URI;
@@ -56,7 +54,6 @@ async function handleKakaoCallback(code: string, state: string | null) {
 
   try {
     // 1. 인증 코드로 액세스 토큰 교환
-    console.log("🔄 [서버] 카카오 토큰 교환 시작");
     const tokenResponse = await fetch(KAKAO_TOKEN_URL, {
       method: "POST",
       headers: {
@@ -82,10 +79,6 @@ async function handleKakaoCallback(code: string, state: string | null) {
 
     const tokenData = await tokenResponse.json();
     const accessToken = tokenData.access_token;
-    console.log("✅ [서버] 카카오 토큰 교환 성공", { 
-      hasAccessToken: !!accessToken,
-      tokenType: tokenData.token_type 
-    });
 
     if (!accessToken) {
       console.error("❌ [서버] 액세스 토큰 없음");
@@ -96,7 +89,6 @@ async function handleKakaoCallback(code: string, state: string | null) {
     }
 
     // 2. 액세스 토큰으로 사용자 정보 조회
-    console.log("🔄 [서버] 카카오 사용자 정보 조회 시작");
     const userInfoResponse = await fetch(KAKAO_USER_INFO_URL, {
       method: "GET",
       headers: {
@@ -118,11 +110,6 @@ async function handleKakaoCallback(code: string, state: string | null) {
     const kakaoId = userInfo.id?.toString();
     const nickname = userInfo.kakao_account?.profile?.nickname || null;
     const email = userInfo.kakao_account?.email || null;
-    console.log("✅ [서버] 카카오 사용자 정보 조회 성공", { 
-      kakaoId, 
-      nickname, 
-      hasEmail: !!email 
-    });
 
     if (!kakaoId) {
       console.error("❌ [서버] 카카오 ID 없음");
@@ -134,7 +121,6 @@ async function handleKakaoCallback(code: string, state: string | null) {
 
     // 3. Supabase에 사용자 정보 저장/업데이트 및 세션 생성
     // 3-1. kakao_id로 기존 고객 조회
-    console.log("🔄 [서버] Supabase 고객 조회 시작", { kakaoId });
     let customer: Customer | null = null;
     const { data: existingCustomer, error: findError } = await supabaseServerClient
       .from("customer")
@@ -154,7 +140,6 @@ async function handleKakaoCallback(code: string, state: string | null) {
 
     // 3-2. 고객이 없으면 새로 생성
     if (!customer) {
-      console.log("➕ [서버] 새 고객 생성");
       const customerName = nickname || "카카오 사용자";
       
       const { data: newCustomer, error: createError } = await supabaseServerClient
@@ -178,12 +163,9 @@ async function handleKakaoCallback(code: string, state: string | null) {
       }
 
       customer = newCustomer as Customer;
-      console.log("✅ [서버] 새 고객 생성 완료", { customerId: customer.id });
     } else {
-      console.log("🔄 [서버] 기존 고객 발견", { customerId: customer.id });
       // 3-3. 기존 고객이 있으면 닉네임 업데이트 (변경된 경우)
       if (nickname && customer.name !== nickname) {
-        console.log("🔄 [서버] 닉네임 업데이트", { old: customer.name, new: nickname });
         const { data: updatedCustomer, error: updateError } = await supabaseServerClient
           .from("customer")
           .update({ name: nickname })
@@ -198,7 +180,6 @@ async function handleKakaoCallback(code: string, state: string | null) {
     }
 
     // 4. 세션 쿠키 설정
-    console.log("🍪 [서버] 쿠키 설정 시작", { customerId: customer.id, kakaoId: customer.kakao_id });
     const response = NextResponse.json({
       success: true,
       user: {
@@ -229,11 +210,6 @@ async function handleKakaoCallback(code: string, state: string | null) {
         path: "/",
       });
     }
-
-    console.log("✅ [서버] 로그인 완료 및 쿠키 설정 완료", {
-      customerId: customer.id,
-      kakaoId: customer.kakao_id,
-    });
 
     return response;
   } catch (error) {
