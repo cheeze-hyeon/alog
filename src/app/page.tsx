@@ -58,10 +58,17 @@ export default function Home() {
 
               <Link
                 href="/mypage?phone=01012345678"
+                className="block rounded-lg px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90 active:opacity-80"
+                style={{ backgroundColor: "#6CB6E0" }}
+              >
+                알맹 히스토리
+              </Link>
+              <Link
+                href="/login"
                 className="block rounded-lg border px-4 py-3 text-sm font-semibold transition hover:bg-slate-50 active:bg-slate-100"
                 style={{ borderColor: "#6CB6E0", color: "#6CB6E0" }}
               >
-                알맹 히스토리
+                카카오 로그인 후 이용하기
               </Link>
             </div>
           </section>

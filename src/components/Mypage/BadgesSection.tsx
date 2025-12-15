@@ -103,7 +103,7 @@ export default function BadgesSection({ purchaseItems, selectedYear }: BadgesSec
             </div>
             {/* 오른쪽 둥근 직사각형 부분 - 원형과 자연스럽게 연결 */}
             <div className="relative h-[26px] px-3 flex items-center rounded-r-[50px] border border-black/50 border-l-0 bg-white -ml-[2px] self-center">
-              <p className="text-[13px] text-black/50 whitespace-nowrap">6개</p>
+              <p className="text-[13px] text-black/50 whitespace-nowrap">0개</p>
             </div>
           </div>
         </div>
