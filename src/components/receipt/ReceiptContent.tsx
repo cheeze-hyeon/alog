@@ -55,12 +55,6 @@ export default function ReceiptContent({
     <>
       <main className="mx-auto max-w-2xl px-6 py-10">
         <div className="max-w-[393px] mx-auto bg-white px-5 py-6 flex flex-col gap-6">
-          {/* 상단 헤더 */}
-          <div className="flex justify-end">
-            <button className="text-[13px] text-black/50 border border-black/30 rounded-lg px-3 py-1">
-              영수증 이미지로 저장
-            </button>
-          </div>
 
           {/* 빨간 원 + 날짜 */}
           <div className="flex flex-col items-center gap-3 mt-4">
