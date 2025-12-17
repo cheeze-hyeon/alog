@@ -139,17 +139,17 @@
 
 ## 3. 데모 및 문서 링크
 
-### 서비스 링크(배포 URL)
+### 서비스 링크
 ```
 https://alog-almang.vercel.app/
 ```
 
-### 시연 영상(선택)
+### 시연 영상
 ```
 https://drive.google.com/file/d/15ucp2-r_CIE8FnWrQG-w1kByqHzk1BIH/view?usp=drive_link
 ```
 
-### 발표 자료(PDF)
+### 발표 자료
 ```
 https://drive.google.com/file/d/1jaZui3KfF-gAgbiGlWkNSrzDL2O9oK_0/view
 ```
